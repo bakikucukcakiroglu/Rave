@@ -19,7 +19,7 @@ public abstract class WritableWrapper implements ReactSerialisable {
         return this;
     }
 
-    public static WritableWrapper wrap(Collection<? extends ReactSerialisable> coll) {
+    public static WrappedArray wrap(Collection<? extends ReactSerialisable> coll) {
         WritableArray arr = Arguments.createArray();
         coll.forEach(o -> o.toReact().addTo(arr));
         return new WrappedArray(arr);
@@ -59,7 +59,7 @@ public abstract class WritableWrapper implements ReactSerialisable {
         }
 
         @Override
-        public Object getObj() {
+        public WritableArray getObj() {
             return inner;
         }
     }
@@ -82,7 +82,7 @@ public abstract class WritableWrapper implements ReactSerialisable {
         }
 
         @Override
-        public Object getObj() {
+        public WritableMap getObj() {
             return inner;
         }
     }
@@ -105,7 +105,7 @@ public abstract class WritableWrapper implements ReactSerialisable {
         }
 
         @Override
-        public Object getObj() {
+        public String getObj() {
             return inner;
         }
     }

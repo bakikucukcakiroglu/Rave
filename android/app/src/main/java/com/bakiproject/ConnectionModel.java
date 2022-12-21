@@ -9,16 +9,15 @@ import com.bakiproject.communication.CommunicationServer;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
 import com.bakiproject.react.ReactObservable;
 import com.bakiproject.react.WritableWrapper;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 
@@ -49,16 +48,23 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         }
     }
 
-    @Override
+    /*@Override
     public void initialize() {
-        emitter = this.getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
+        super.initialize();
 
-        serverListObservable.subscribe(list -> emitter.emit("serverListChange", list));
-        stateObservable.subscribe(state -> emitter.emit("stateChange", state));
-        userListObservable.subscribe(list -> emitter.emit("userListChange", list));
-    }
-
-
+        serverListObservable.subscribe(list -> this
+                .getReactApplicationContext()
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit("serverListChange", list));
+        stateObservable.subscribe(state -> this
+                .getReactApplicationContext()
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit("stateChange", state));
+        userListObservable.subscribe(list -> this
+                .getReactApplicationContext()
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit("userListChange", list));
+    }*/
 
     @NonNull
     @Override
@@ -121,5 +127,20 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         communicationClient.close();
         communicationClient = null;
         stateObservable.accept(State.READY);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String getState(){
+        return WritableWrapper.wrap(stateObservable.getState()).getObj();
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public WritableArray getUserList(){
+        return WritableWrapper.wrap(userListObservable.getState()).getObj();
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public WritableArray getServerList(){
+        return WritableWrapper.wrap(serverListObservable.getState()).getObj();
     }
 }
