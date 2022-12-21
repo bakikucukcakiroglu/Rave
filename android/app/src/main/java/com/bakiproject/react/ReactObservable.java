@@ -9,12 +9,17 @@ import java.util.function.Function;
 
 
 public class ReactObservable<T> implements Consumer<T> {
-    T state = null;
+    T state;
     List<Callback> callbacks = new ArrayList<>();
     final Function<T, WritableWrapper> serialise;
 
     public ReactObservable(Function<T, WritableWrapper> serialise) {
+        this(serialise, null);
+    }
+
+    public ReactObservable(Function<T, WritableWrapper> serialise, T state) {
         this.serialise = serialise;
+        this.state = state;
     }
 
     @Override
@@ -36,7 +41,7 @@ public class ReactObservable<T> implements Consumer<T> {
         callback.invoke(serialise.apply(state).getObj());
     }
 
-    public T getState(){
+    public T getState() {
         return state;
     }
 }
