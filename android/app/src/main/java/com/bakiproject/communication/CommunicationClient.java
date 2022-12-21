@@ -48,6 +48,7 @@ public class CommunicationClient {
         new CommunicationClient(addr, 8000, "asd", a->{});
         System.out.print("Done at addr:");
         System.out.println(addr);
+        //noinspection ResultOfMethodCallIgnored
         System.in.read();
     }
 
@@ -66,7 +67,7 @@ public class CommunicationClient {
                     throw new RuntimeException(e);
                 }
             } else if (rawMsg instanceof Message.UsersListUpdateMessage) {
-
+                onUsersReceived.accept(((Message.UsersListUpdateMessage) rawMsg).users());
             }
         }
     }

@@ -1,5 +1,7 @@
 package com.bakiproject.communication;
 
+import androidx.annotation.NonNull;
+
 import com.bakiproject.UserInfo;
 
 import java.io.Serializable;
@@ -7,43 +9,6 @@ import java.util.Objects;
 import java.util.Set;
 
 public interface Message extends Serializable {
-
-    final class UserIntroMessage implements Message {
-        private static final long serialVersionUID = 0L;
-        private final UserInfo info;
-
-        public UserIntroMessage(UserInfo info) {
-            this.info = info;
-        }
-
-        public UserIntroMessage(String username, byte[] profilePic) {
-            this.info = new UserInfo(username, profilePic, null);
-        }
-
-        public UserInfo info() {
-            return info;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            UserIntroMessage that = (UserIntroMessage) obj;
-            return Objects.equals(this.info, that.info);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(info);
-        }
-
-        @Override
-        public String toString() {
-            return "UserIntroMessage[" +
-                    "info=" + info + ']';
-        }
-
-        }
 
     final class GetTimeMessage implements Message {
         private static final long serialVersionUID = 0L;
@@ -74,6 +39,7 @@ public interface Message extends Serializable {
             return Objects.hash(millisTimeSent);
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "GetTimeMessage[" +
@@ -114,11 +80,50 @@ public interface Message extends Serializable {
             return Objects.hash(millisTimeRequestSent, millisTimeResponseSent);
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "GetTimeResponse[" +
                     "millisTimeRequestSent=" + millisTimeRequestSent + ", " +
                     "millisTimeResponseSent=" + millisTimeResponseSent + ']';
+        }
+
+    }
+
+    final class UserIntroMessage implements Message {
+        private static final long serialVersionUID = 0L;
+        private final UserInfo info;
+
+        public UserIntroMessage(UserInfo info) {
+            this.info = info;
+        }
+
+        public UserIntroMessage(String username, byte[] profilePic) {
+            this.info = new UserInfo(username, profilePic, null);
+        }
+
+        public UserInfo info() {
+            return info;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            UserIntroMessage that = (UserIntroMessage) obj;
+            return Objects.equals(this.info, that.info);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(info);
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "UserIntroMessage[" +
+                    "info=" + info + ']';
         }
 
     }
@@ -148,6 +153,7 @@ public interface Message extends Serializable {
             return Objects.hash(users);
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "UsersListUpdateMessage[" +

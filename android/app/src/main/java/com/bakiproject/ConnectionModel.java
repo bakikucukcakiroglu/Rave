@@ -54,7 +54,9 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void startServer(String roomName, String username) {
-        checkIsReady();
+        if (stateObservable.getState() != State.READY) {
+            return;
+        }
 
         try {
             broadcastServer = new BroadcastServer(roomName);
@@ -69,6 +71,10 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     }
 
     public void stopServer() {
+        if (stateObservable.getState() != State.SERVING) {
+            return;
+        }
+
         broadcastServer.close();
         communicationServer.close();
         stateObservable.accept(State.READY);
@@ -76,10 +82,16 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void connectToServer(Server server, String username) {
-        checkIsReady();
+        if (stateObservable.getState() != State.READY) {
+            return;
+        }
 
         try {
-            communicationClient = new CommunicationClient(server.addr(), 8000, username, userListObservable);
+            communicationClient = new CommunicationClient(
+                    server.addr(),
+                    8000,
+                    username,
+                    userListObservable);
             stateObservable.accept(State.CONNECTED);
         } catch (IOException e) {
             System.out.println(e);
@@ -88,13 +100,13 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void disconnectFromServer() {
-        communicationClient.close();
-        stateObservable.accept(State.READY);
-    }
+        if (stateObservable.getState() != State.CONNECTED) {
+            return;
+        }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public State getState() {
-        return state;
+        communicationClient.close();
+        communicationClient = null;
+        stateObservable.accept(State.READY);
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
@@ -112,9 +124,5 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         userListObservable.subscribe(onUserListChanged);
     }
 
-    private void checkIsReady() {
-        if (stateObservable.getState() != State.READY)
-            throw new RuntimeException("Unexpected state " + stateObservable.getState().name());
-    }
 
 }
