@@ -8,6 +8,7 @@ import com.bakiproject.communication.CommunicationClient;
 import com.bakiproject.communication.CommunicationServer;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Set;
 
 import com.bakiproject.react.ReactObservable;
@@ -29,8 +30,6 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     BroadcastServer broadcastServer = null;
     CommunicationServer communicationServer = null;
-
-    State state = State.READY;
 
     ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap);
     ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap);
@@ -80,14 +79,14 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public void connectToServer(Server server, String username) {
+    public void connectToServer(String addr, String username) {
         if (stateObservable.getState() != State.READY) {
             return;
         }
 
         try {
             communicationClient = new CommunicationClient(
-                    server.addr(),
+                    InetAddress.getByName(addr),
                     8000,
                     username,
                     userListObservable);
@@ -122,6 +121,4 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     public void subscribeToUserList(Callback onUserListChanged) {
         userListObservable.subscribe(onUserListChanged);
     }
-
-
 }
