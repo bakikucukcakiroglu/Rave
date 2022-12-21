@@ -34,7 +34,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     BroadcastServer broadcastServer = null;
     CommunicationServer communicationServer = null;
 
-    final DeviceEventManagerModule.RCTDeviceEventEmitter emitter;
+    DeviceEventManagerModule.RCTDeviceEventEmitter emitter;
 
     ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap, Collections.emptySet());
     ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap, State.READY);
@@ -42,17 +42,23 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
 
     public ConnectionModel(ReactApplicationContext context) {
-        emitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
         try {
             broadcastClient = new BroadcastClient(serverListObservable);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void initialize() {
+        emitter = this.getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
 
         serverListObservable.subscribe(list -> emitter.emit("serverListChange", list));
         stateObservable.subscribe(state -> emitter.emit("stateChange", state));
         userListObservable.subscribe(list -> emitter.emit("userListChange", list));
     }
+
+
 
     @NonNull
     @Override
