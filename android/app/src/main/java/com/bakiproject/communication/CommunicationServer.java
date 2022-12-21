@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CommunicationServer {
     private ServerSocket server;
@@ -16,9 +17,11 @@ public class CommunicationServer {
 
     private boolean isOpen = true;
 
+    private final String username;
     private final Consumer<Set<UserInfo>> onClientConnected;
 
-    public CommunicationServer(Consumer<Set<UserInfo>> onClientConnected) {
+    public CommunicationServer(String roomName, String username, Consumer<Set<UserInfo>> onClientConnected) {
+        this.username = username;
         this.onClientConnected = onClientConnected;
         // starts server and waits for a connection
         try {
@@ -30,8 +33,6 @@ public class CommunicationServer {
             while (isOpen) {
                 try {
                     Socket socket = server.accept();
-                    System.out.print("New connection from ");
-                    System.out.println(socket.getInetAddress());
                     ServerConnection connection = new ServerConnection(socket);
                     new Thread(connection).start();
                 } catch (IOException e) {
@@ -77,10 +78,11 @@ public class CommunicationServer {
                 userInfo = new UserInfo(((Message.UserIntroMessage) rawMsg).info(), address);
                 connections.add(this);
 
-                Message.UsersListUpdateMessage usersMsg = new Message.UsersListUpdateMessage(connections
-                        .stream()
-                        .map(ServerConnection::getUserInfo)
-                        .collect(Collectors.toSet()));
+                Message.UsersListUpdateMessage usersMsg = new Message.UsersListUpdateMessage(
+                        Stream.concat(
+                                        Stream.of(new UserInfo(username, null, null)),
+                                        connections.stream().map(ServerConnection::getUserInfo))
+                                .collect(Collectors.toSet()));
 
                 for (ServerConnection connection : connections) {
                     try {
@@ -106,7 +108,7 @@ public class CommunicationServer {
             connections.remove(this);
         }
 
-        UserInfo getUserInfo(){
+        UserInfo getUserInfo() {
             return userInfo;
         }
     }

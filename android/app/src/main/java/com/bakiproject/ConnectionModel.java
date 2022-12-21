@@ -25,7 +25,6 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     BroadcastClient broadcastClient;
 
-
     CommunicationClient communicationClient = null;
 
     BroadcastServer broadcastServer = null;
@@ -60,7 +59,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
         try {
             broadcastServer = new BroadcastServer(roomName);
-            communicationServer = new CommunicationServer(clients -> {
+            communicationServer = new CommunicationServer(roomName, username, clients -> {
                 broadcastServer.setCurrentMembers(clients.size());
                 userListObservable.accept(clients);
             });
