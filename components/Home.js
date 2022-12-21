@@ -19,6 +19,13 @@ const {ConnectionModel} = NativeModules;
 const Home = ({navigation, route}) => {
   const [openModalIp, setOpenModalIp] = useState('');
   const [visible, setVisible] = useState(false);
+  const [rooms, setRooms] = useState([]);
+
+  const serversUpdate = s => {
+    setRooms(s);
+    ConnectionModel.subscribeToServerList(serversUpdate);
+  };
+  ConnectionModel.subscribeToServerList(serversUpdate);
 
   const onPressBack = () => {
     navigation.setParams({
@@ -39,6 +46,8 @@ const Home = ({navigation, route}) => {
     {ip: '192.168.1.10', room_name: 'Room 10', current_members: 4},
     {ip: '192.168.1.11', room_name: 'Room 11', current_members: 4},
   ];
+
+  useEffect(() => {}, []);
 
   useEffect(() => {
     if (route.params.loading != undefined) {
@@ -82,15 +91,15 @@ const Home = ({navigation, route}) => {
       </Pressable>
       <ScrollView>
         <View style={styles.container}>
-          {data.map(room => {
+          {rooms.map(room => {
             return (
               <Card key={room.ip} style={styles.card}>
                 <Card.Content style={styles.cardContent}>
-                  <Title style={{marginTop: -5}}>{room.room_name} </Title>
+                  <Title style={{marginTop: -5}}>{room.name} </Title>
                   <View style={styles.middleCard}>
-                    <Text>Room IP: {room.ip}</Text>
+                    <Text>Room IP: {room.address}</Text>
                     <Pressable
-                      onPress={() => setOpenModalIp(room.ip)}
+                      onPress={() => setOpenModalIp(room.address)}
                       style={({pressed}) => ({
                         opacity: pressed ? 0.5 : 1,
                       })}>
@@ -103,7 +112,7 @@ const Home = ({navigation, route}) => {
                       <Text>{'+'}</Text>
                     </Pressable>
                   </View>
-                  <Text>Current Member: {room.current_members}</Text>
+                  <Text>Current Member: {room.currentMembers}</Text>
 
                   {openModalIp == room.ip && (
                     <View style={styles.centeredView}>
