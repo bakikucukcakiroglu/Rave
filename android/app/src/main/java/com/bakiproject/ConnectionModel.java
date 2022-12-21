@@ -9,6 +9,8 @@ import com.bakiproject.communication.CommunicationServer;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 import com.bakiproject.react.ReactObservable;
@@ -31,9 +33,9 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     BroadcastServer broadcastServer = null;
     CommunicationServer communicationServer = null;
 
-    ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap);
-    ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap);
-    ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap);
+    ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap, Collections.emptySet());
+    ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap, State.READY);
+    ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap, Collections.emptySet());
 
 
     public ConnectionModel(ReactApplicationContext context) {
