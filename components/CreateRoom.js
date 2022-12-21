@@ -7,14 +7,24 @@ import {
   Text,
   View,
   Pressable,
+  NativeModules,
 } from 'react-native';
 import {useState} from 'react';
 import WheelPicker from 'react-native-wheely';
 
+const {ConnectionModel} = NativeModules;
+
 const CreateRoom = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
+  const [roomName, setRoomName] = useState('');
+  const [roomCapacity, setRoomCapacity] = useState(0);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const handleSubmitCreateRoom = () => {
+    //ConnectionModel.startServer(roomName, userName);
+  };
 
   return (
     <View style={styles.container}>
@@ -32,6 +42,7 @@ const CreateRoom = ({navigation}) => {
             marginBottom: 20,
           }}
           placeholder="User Name"
+          placeholderTextColor="#000"
           value={userName}
           onChangeText={setUserName}></TextInput>
         <Text style={styles.inputLabel}>Room Name</Text>
@@ -47,12 +58,13 @@ const CreateRoom = ({navigation}) => {
             marginBottom: 20,
           }}
           placeholder="Room Name"
-          value={userName}
-          onChangeText={setUserName}></TextInput>
+          placeholderTextColor="#000"
+          value={roomName}
+          onChangeText={setRoomName}></TextInput>
         <Text style={styles.inputLabel}>Room Capacity</Text>
         <WheelPicker
           visibleRest={1}
-          selectedIndex={selectedIndex}
+          selectedIndex={roomCapacity}
           itemHeight={40}
           options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
           onChange={index => setSelectedIndex(index)}
@@ -67,7 +79,7 @@ const CreateRoom = ({navigation}) => {
       </View>
       <Pressable
         style={({pressed}) => (pressed ? styles.buttonPressed : styles.button)}
-        onPress={() => navigation.navigate('Room', {name: 'Kübra'})}>
+        onPress={handleSubmitCreateRoom}>
         <Text style={styles.textStyle}>Let's GO</Text>
       </Pressable>
     </View>
@@ -76,15 +88,11 @@ const CreateRoom = ({navigation}) => {
 
 const styles = StyleSheet.create({
   container: {
-    //display: "flex",
     flex: 1,
-    //alignItems: 'stretch',
     justifyContent: 'flex-start',
     borderWidth: 0,
     borderColor: 'white',
     backgroundColor: 'white',
-
-    //backgroundColor: "#0B1B54"
   },
   userProfileImage: {
     color: 'black',
@@ -114,9 +122,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'red',
     textAlign: 'center',
-    //alignItems: 'stretch'
   },
-
   button: {
     opacity: 1,
     width: '92%',
@@ -144,7 +150,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
   inputLabel: {
     padding: 5,
     marginLeft: 10,

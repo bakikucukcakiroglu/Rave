@@ -8,17 +8,23 @@ import {
   Modal,
   NativeModules,
   Button,
+  ActivityIndicator,
 } from 'react-native';
 
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {Card, Title} from 'react-native-paper';
 
 const {ConnectionModel} = NativeModules;
 
-const Home = ({navigation}) => {
-  const [isStreaming, setIsStreaming] = useState(false);
+const Home = ({navigation, route}) => {
   const [openModalIp, setOpenModalIp] = useState('');
-  const [text, setText] = useState('+');
+  const [visible, setVisible] = useState(false);
+
+  const onPressBack = () => {
+    navigation.setParams({
+      loading: false,
+    });
+  };
 
   const data = [
     {ip: '192.168.1.1', room_name: 'Room 1', current_members: 2},
@@ -34,13 +40,36 @@ const Home = ({navigation}) => {
     {ip: '192.168.1.11', room_name: 'Room 11', current_members: 4},
   ];
 
-  const handlePress = room => {
-    setOpenModalIp(room.ip);
-    // setText(ConnectionModel.thirtyOne());
-    // alert(JSON.stringify(ConnectionModel.getAvailableServers()));
+  useEffect(() => {
+    if (route.params.loading != undefined) {
+      setVisible(route.params.loading);
+    }
+  }, [route.params?.loading]);
+
+  const joinRoomOnPressHandler = room => {
+    //setText(ConnectionModel.thirtyOne());
+    //alert(JSON.stringify(ConnectionModel.getAvailableServers()));
   };
 
-  return !isStreaming ? (
+  const createRoomOnPressHandler = () => {
+    //ConnectionModel.startServer();
+    navigation.navigate('Create Room', {name: 'Jane'});
+  };
+
+  return visible ? (
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <ActivityIndicator color={'#2196F3'} size={'large'} />
+      <Pressable
+        style={({pressed}) => ({
+          opacity: pressed ? 0.5 : 1,
+          padding: 10,
+          backgroundColor: '#2196F3',
+        })}
+        onPress={onPressBack}>
+        <Text style={styles.textStyle}>Back</Text>
+      </Pressable>
+    </View>
+  ) : (
     <View>
       <Pressable
         style={({pressed}) => ({
@@ -48,7 +77,7 @@ const Home = ({navigation}) => {
           padding: 10,
           backgroundColor: '#2196F3',
         })}
-        onPress={() => navigation.navigate('Create Room', {name: 'Jane'})}>
+        onPress={createRoomOnPressHandler}>
         <Text style={styles.textStyle}>Create Room</Text>
       </Pressable>
       <ScrollView>
@@ -61,7 +90,7 @@ const Home = ({navigation}) => {
                   <View style={styles.middleCard}>
                     <Text>Room IP: {room.ip}</Text>
                     <Pressable
-                      onPress={() => handlePress(room)}
+                      onPress={() => setOpenModalIp(room.ip)}
                       style={({pressed}) => ({
                         opacity: pressed ? 0.5 : 1,
                       })}>
@@ -71,7 +100,7 @@ const Home = ({navigation}) => {
                       color="black"
                       style={{marginRight: 15}}
                     /> */}
-                      <Text>{text}</Text>
+                      <Text>{'+'}</Text>
                     </Pressable>
                   </View>
                   <Text>Current Member: {room.current_members}</Text>
@@ -83,7 +112,7 @@ const Home = ({navigation}) => {
                         transparent={true}
                         visible={true}
                         onRequestClose={() => {
-                          alert('Modal has been closed.');
+                          //alert('Modal has been closed.');
                           setOpenModalIp('');
                         }}>
                         <View style={styles.centeredView}>
@@ -106,9 +135,11 @@ const Home = ({navigation}) => {
 
                               <Pressable
                                 style={[styles.button, styles.buttonClose]}
-                                onPress={() =>
-                                  navigation.navigate('Room', {name: 'jane'})
-                                }>
+                                onPress={() => {
+                                  navigation.setParams({
+                                    loading: true,
+                                  });
+                                }}>
                                 <Text style={styles.textStyle}>Yep!</Text>
                               </Pressable>
                             </View>
@@ -124,21 +155,10 @@ const Home = ({navigation}) => {
         </View>
       </ScrollView>
     </View>
-  ) : (
-    <View style={styles.container}>
-      <Text style={styles.title}>Köle</Text>
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
-      />
-      <EditScreenInfo path="/screens/TabTwoScreen.tsx" />
-    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {},
   card: {
     display: 'flex',
     flexDirection: 'column',
@@ -163,6 +183,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 30,
   },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   modalView: {
     width: '100%',
     backgroundColor: 'white',
@@ -179,6 +204,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    alignSelf: 'flex-start',
+  },
+  container: {},
   button: {
     borderRadius: 20,
     padding: 10,
@@ -190,19 +221,14 @@ const styles = StyleSheet.create({
   buttonClose: {
     backgroundColor: '#2196F3',
   },
-  textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    alignSelf: 'flex-start',
-  },
+
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  lottie: {
+    width: 100,
+    height: 100,
   },
 });
 export default Home;
