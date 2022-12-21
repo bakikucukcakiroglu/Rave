@@ -28,9 +28,7 @@ public class ReactObservable<T> implements Consumer<T> {
     }
 
     private void sendUpdates() {
-        List<Callback> privCallbacks = callbacks;
-        callbacks = new ArrayList<>();
-        privCallbacks.forEach(this::sendUpdate);
+        callbacks.forEach(this::sendUpdate);
     }
 
     public void subscribe(Consumer<Object> c) {
