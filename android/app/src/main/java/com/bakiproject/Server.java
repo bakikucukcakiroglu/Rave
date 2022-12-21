@@ -1,15 +1,16 @@
 package com.bakiproject;
 
 import com.bakiproject.broadcast.BroadcastProtocol;
+import com.bakiproject.react.ReactSerialisable;
+import com.bakiproject.react.WritableWrapper;
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.JavaScriptModuleRegistry;
 import com.facebook.react.bridge.WritableMap;
 
 import java.net.InetAddress;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class Server {
+public final class Server implements ReactSerialisable {
     private final InetAddress addr;
     private final String name;
     private final int port;
@@ -73,21 +74,14 @@ public final class Server {
                 "currentMembers=" + currentMembers + ']';
     }
 
-
-    public WritableMap getServerAsString() {
-        // Create a new JavaScript object to represent the Person
-        WritableMap personMap = Arguments.createMap();
-
-        // Add the Person's name and age to the JavaScript object
-        personMap.putString("name", this.name);
-
-
-        // Return the JavaScript object
-        return personMap;
+    @Override
+    public WritableWrapper toReact() {
+        WritableMap map = Arguments.createMap();
+        map.putString("name", name);
+        map.putString("address", addr.getHostAddress());
+        map.putInt("currentMembers", currentMembers);
+        return WritableWrapper.wrap(map);
     }
-
-
-
 }
 
 

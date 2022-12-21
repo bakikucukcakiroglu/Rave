@@ -16,6 +16,10 @@ public interface Message extends Serializable {
             this.info = info;
         }
 
+        public UserIntroMessage(String username, byte[] profilePic) {
+            this.info = new UserInfo(username, profilePic, null);
+        }
+
         public UserInfo info() {
             return info;
         }

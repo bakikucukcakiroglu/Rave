@@ -74,13 +74,14 @@ public class CommunicationServer {
                 timeDifference = (ctm + msg.millisTimeRequestSent()) / 2 - msg.millisTimeResponseSent();
                 System.out.printf("Time difference: %d%n", timeDifference);
             } else if (rawMsg instanceof Message.UserIntroMessage) {
-                userInfo = ((Message.UserIntroMessage) rawMsg).info();
+                userInfo = new UserInfo(((Message.UserIntroMessage) rawMsg).info(), address);
                 connections.add(this);
 
                 Message.UsersListUpdateMessage usersMsg = new Message.UsersListUpdateMessage(connections
                         .stream()
                         .map(ServerConnection::getUserInfo)
                         .collect(Collectors.toSet()));
+
                 for (ServerConnection connection : connections) {
                     try {
                         connection.sendMessage(usersMsg);

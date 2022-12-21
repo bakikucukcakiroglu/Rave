@@ -1,40 +1,30 @@
 package com.bakiproject;
 
+import androidx.annotation.NonNull;
+
 import com.bakiproject.broadcast.BroadcastClient;
 import com.bakiproject.broadcast.BroadcastServer;
 import com.bakiproject.communication.CommunicationClient;
 import com.bakiproject.communication.CommunicationServer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.NativeModule;
+import com.bakiproject.react.ReactObservable;
+import com.bakiproject.react.WritableWrapper;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.WritableArray;
-
-import java.util.Map;
-import java.util.HashMap;
-import android.util.Log;
-
 
 
 public class ConnectionModel extends ReactContextBaseJavaModule {
 
 
-    enum State {READY, CONNECTED, SERVING, FAILED}
+    enum State {READY, CONNECTED, SERVING}
 
     BroadcastClient broadcastClient;
+
 
     CommunicationClient communicationClient = null;
 
@@ -43,86 +33,88 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     State state = State.READY;
 
+    ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap);
+    ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap);
+    ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap);
 
 
     public ConnectionModel(ReactApplicationContext context) {
         try {
-            broadcastClient = new BroadcastClient();
+            broadcastClient = new BroadcastClient(serverListObservable);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+    @NonNull
     @Override
     public String getName() {
         return "ConnectionModel";
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public int thirtyOne() {
-        return 31;
-    }
-
-    public boolean startServer(String name, Consumer<Set<UserInfo>> onUserInfoChanged) {
-        if (state != State.READY)
-            return false;
+    public void startServer(String roomName, String username) {
+        checkIsReady();
 
         try {
-            broadcastServer = new BroadcastServer(name);
+            broadcastServer = new BroadcastServer(roomName);
             communicationServer = new CommunicationServer(clients -> {
                 broadcastServer.setCurrentMembers(clients.size());
-                onUserInfoChanged.accept(clients);
+                userListObservable.accept(clients);
             });
-            state = State.SERVING;
-            return true;
+            stateObservable.accept(State.SERVING);
         } catch (IOException e) {
             System.out.println(e);
-            return false;
         }
     }
 
     public void stopServer() {
         broadcastServer.close();
         communicationServer.close();
-        state = State.READY;
+        stateObservable.accept(State.READY);
     }
 
-    public boolean connectToServer(Server server) {
-        if (state != State.READY)
-            return false;
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public void connectToServer(Server server, String username) {
+        checkIsReady();
+
         try {
-            communicationClient = new CommunicationClient(server.addr(), 8000);
-            return true;
+            communicationClient = new CommunicationClient(server.addr(), 8000, username, userListObservable);
+            stateObservable.accept(State.CONNECTED);
         } catch (IOException e) {
             System.out.println(e);
-            return false;
         }
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
     public void disconnectFromServer() {
         communicationClient.close();
+        stateObservable.accept(State.READY);
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
     public State getState() {
         return state;
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public WritableArray getAvailableServers() {
-
-        // Create a new ReadableArray object
-        WritableArray array = Arguments.createArray();
-
-        broadcastClient.getAvailableServers().forEach(( server) -> {
-
-
-            array.pushMap(server.getServerAsString());
-            System.out.println("çalıştı");
-        });
-        System.out.println("çalıştı2");
-
-
-        return array;
+    public void subscribeToServerList(Callback onServersChanged) {
+        serverListObservable.subscribe(onServersChanged);
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public void subscribeToState(Callback onStateChanged) {
+        stateObservable.subscribe(onStateChanged);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public void subscribeToUserList(Callback onUserListChanged) {
+        userListObservable.subscribe(onUserListChanged);
+    }
+
+    private void checkIsReady() {
+        if (stateObservable.getState() != State.READY)
+            throw new RuntimeException("Unexpected state " + stateObservable.getState().name());
+    }
 
 }

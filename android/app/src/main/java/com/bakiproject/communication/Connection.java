@@ -3,11 +3,13 @@ package com.bakiproject.communication;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 
 public abstract class Connection implements Runnable {
     private final ObjectInputStream in;
     private final ObjectOutputStream out;
+    public final InetAddress address;
     private volatile boolean isRunning = true;
 
     public Connection(Socket socket, boolean isServer) throws IOException {
@@ -18,6 +20,7 @@ public abstract class Connection implements Runnable {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
         }
+        address = socket.getInetAddress();
     }
 
     public void close() {

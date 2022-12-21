@@ -16,16 +16,15 @@ import java.util.function.Consumer;
 public class CommunicationClient {
     ClientConnection connection;
 
-    Consumer<Set<UserInfo>> onUsersReceived = (a)->{};
+    private final String username;
+    final Consumer<Set<UserInfo>> onUsersReceived;
 
-    public CommunicationClient(InetAddress address, int port) throws IOException {
+    public CommunicationClient(InetAddress address, int port, String username, Consumer<Set<UserInfo>> onUsersReceived) throws IOException {
+        this.username = username;
+        this.onUsersReceived = onUsersReceived;
         Socket socket = new Socket(address, port);
         connection = new ClientConnection(socket);
         connection.run();
-    }
-
-    public void setOnUsersReceived(Consumer<Set<UserInfo>> onUsersReceived) {
-        this.onUsersReceived = onUsersReceived;
     }
 
     public void close() {
@@ -35,7 +34,7 @@ public class CommunicationClient {
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        BroadcastClient client = new BroadcastClient();
+        BroadcastClient client = new BroadcastClient(a->{});
         Thread.sleep(7000);
 
         List<Server> announcements = new ArrayList<>(client.getAvailableServers());
@@ -46,7 +45,7 @@ public class CommunicationClient {
         int i = new Scanner(System.in).nextInt();
         System.out.println(i);
         InetAddress addr = announcements.get(i).addr();
-        new CommunicationClient(addr, 8000);
+        new CommunicationClient(addr, 8000, "asd", a->{});
         System.out.print("Done at addr:");
         System.out.println(addr);
         System.in.read();
@@ -55,6 +54,7 @@ public class CommunicationClient {
     private class ClientConnection extends Connection {
         public ClientConnection(Socket socket) throws IOException {
             super(socket, false);
+            sendMessage(new Message.UserIntroMessage(username, null));
         }
 
         @Override

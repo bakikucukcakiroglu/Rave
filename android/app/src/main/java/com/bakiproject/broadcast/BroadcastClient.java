@@ -10,16 +10,19 @@ import java.time.Clock;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class BroadcastClient {
 
     private final MulticastSocket socket;
+    final Consumer<Set<Server>> onServerListChanged;
     InetAddress group;
     ListenerThread listenerThread;
 
     HashSet<Server> availableServers = new HashSet<>();
 
-    public BroadcastClient() throws IOException {
+    public BroadcastClient(Consumer<Set<Server>> onServerListChanged) throws IOException {
+        this.onServerListChanged = onServerListChanged;
         socket = new MulticastSocket(BroadcastProtocol.BROADCAST_PORT);
         group = InetAddress.getByName(BroadcastProtocol.BROADCAST_SERVER);
         socket.joinGroup(group);
@@ -60,7 +63,7 @@ public class BroadcastClient {
                     }
 
                     availableServers = announcements;
-
+                    onServerListChanged.accept(availableServers);
                     Thread.sleep(5000);
                 } catch (IOException | InterruptedException e) {
                     isRunning = false;
