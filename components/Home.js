@@ -36,8 +36,13 @@ const Home = ({navigation}) => {
 
   const handlePress = room => {
     setOpenModalIp(room.ip);
-    // setText(ConnectionModel.thirtyOne());
-    // alert(JSON.stringify(ConnectionModel.getAvailableServers()));
+    //setText(ConnectionModel.thirtyOne());
+    alert(JSON.stringify(ConnectionModel.getAvailableServers()));
+  };
+
+  const createRoomOnPressHandler = () => {
+    //ConnectionModel.startServer();
+    navigation.navigate('Create Room', {name: 'Jane'});
   };
 
   return !isStreaming ? (
@@ -48,7 +53,7 @@ const Home = ({navigation}) => {
           padding: 10,
           backgroundColor: '#2196F3',
         })}
-        onPress={() => navigation.navigate('Create Room', {name: 'Jane'})}>
+        onPress={createRoomOnPressHandler}>
         <Text style={styles.textStyle}>Create Room</Text>
       </Pressable>
       <ScrollView>
@@ -138,7 +143,6 @@ const Home = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {},
   card: {
     display: 'flex',
     flexDirection: 'column',
@@ -163,6 +167,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 30,
   },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   modalView: {
     width: '100%',
     backgroundColor: 'white',
@@ -179,6 +188,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    alignSelf: 'flex-start',
+  },
+  container: {},
   button: {
     borderRadius: 20,
     padding: 10,
@@ -190,16 +205,7 @@ const styles = StyleSheet.create({
   buttonClose: {
     backgroundColor: '#2196F3',
   },
-  textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    alignSelf: 'flex-start',
-  },
+
   title: {
     fontSize: 20,
     fontWeight: 'bold',
