@@ -43,10 +43,13 @@ const Home = ({navigation, route}) => {
   ];
 
   useEffect(() => {
-    const eventEmitter = new NativeEventEmitter(NativeModules.ToastExample);
-    this.eventListener = eventEmitter.addListener('EventReminder', event => {
-      console.log(event.eventProperty); // "someValue"
-    });
+    const interval = setInterval(() => {
+      setRooms(ConnectionModel.getServerList());
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {

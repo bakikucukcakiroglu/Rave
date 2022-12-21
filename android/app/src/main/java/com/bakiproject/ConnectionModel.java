@@ -20,11 +20,11 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-
 public class ConnectionModel extends ReactContextBaseJavaModule {
 
-
-    enum State {READY, CONNECTED, SERVING}
+    enum State {
+        READY, CONNECTED, SERVING
+    }
 
     BroadcastClient broadcastClient;
 
@@ -35,10 +35,11 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     DeviceEventManagerModule.RCTDeviceEventEmitter emitter;
 
-    ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap, Collections.emptySet());
+    ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap,
+            Collections.emptySet());
     ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap, State.READY);
-    ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap, Collections.emptySet());
-
+    ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap,
+            Collections.emptySet());
 
     public ConnectionModel(ReactApplicationContext context) {
         try {
@@ -48,23 +49,25 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         }
     }
 
-    /*@Override
-    public void initialize() {
-        super.initialize();
-
-        serverListObservable.subscribe(list -> this
-                .getReactApplicationContext()
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit("serverListChange", list));
-        stateObservable.subscribe(state -> this
-                .getReactApplicationContext()
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit("stateChange", state));
-        userListObservable.subscribe(list -> this
-                .getReactApplicationContext()
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit("userListChange", list));
-    }*/
+    /*
+     * @Override
+     * public void initialize() {
+     * super.initialize();
+     * 
+     * serverListObservable.subscribe(list -> this
+     * .getReactApplicationContext()
+     * .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+     * .emit("serverListChange", list));
+     * stateObservable.subscribe(state -> this
+     * .getReactApplicationContext()
+     * .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+     * .emit("stateChange", state));
+     * userListObservable.subscribe(list -> this
+     * .getReactApplicationContext()
+     * .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+     * .emit("userListChange", list));
+     * }
+     */
 
     @NonNull
     @Override
@@ -130,17 +133,18 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public String getState(){
+    public String getState() {
         return WritableWrapper.wrap(stateObservable.getState()).getObj();
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public WritableArray getUserList(){
+    public WritableArray getUserList() {
         return WritableWrapper.wrap(userListObservable.getState()).getObj();
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public WritableArray getServerList(){
+    public WritableArray getServerList() {
+        System.out.println(serverListObservable.getState());
         return WritableWrapper.wrap(serverListObservable.getState()).getObj();
     }
 }
