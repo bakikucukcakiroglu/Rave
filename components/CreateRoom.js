@@ -23,8 +23,7 @@ const CreateRoom = ({navigation}) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleSubmitCreateRoom = () => {
-    //ConnectionModel.startServer(roomName, null);
-    navigation.navigate('Room', {name: 'Kübra'});
+    //ConnectionModel.startServer(roomName, userName);
   };
 
   return (
