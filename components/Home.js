@@ -9,6 +9,7 @@ import {
   NativeModules,
   Button,
   ActivityIndicator,
+  NativeEventEmitter,
 } from 'react-native';
 
 import {useState, useEffect} from 'react';
@@ -20,12 +21,6 @@ const Home = ({navigation, route}) => {
   const [openModalIp, setOpenModalIp] = useState('');
   const [visible, setVisible] = useState(false);
   const [rooms, setRooms] = useState([]);
-
-  const serversUpdate = s => {
-    setRooms(s);
-    ConnectionModel.subscribeToServerList(serversUpdate);
-  };
-  ConnectionModel.subscribeToServerList(serversUpdate);
 
   const onPressBack = () => {
     navigation.setParams({
@@ -47,7 +42,12 @@ const Home = ({navigation, route}) => {
     {ip: '192.168.1.11', room_name: 'Room 11', current_members: 4},
   ];
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    const eventEmitter = new NativeEventEmitter(NativeModules.ToastExample);
+    this.eventListener = eventEmitter.addListener('EventReminder', event => {
+      console.log(event.eventProperty); // "someValue"
+    });
+  }, []);
 
   useEffect(() => {
     if (route.params.loading != undefined) {
