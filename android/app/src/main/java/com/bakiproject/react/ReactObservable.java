@@ -7,13 +7,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-
 public class ReactObservable<T> implements Consumer<T> {
-<<<<<<< HEAD
-    final T state;
-=======
     T state;
->>>>>>> 55c260576c237008b1a945d80c04b3c318c04d34
     List<Callback> callbacks = new ArrayList<>();
     final Function<T, WritableWrapper> serialise;
 
@@ -28,12 +23,14 @@ public class ReactObservable<T> implements Consumer<T> {
 
     @Override
     public void accept(T t) {
-        //state = t;
+        // state = t;
         sendUpdates();
     }
 
     private void sendUpdates() {
-        callbacks.forEach(this::sendUpdate);
+        List<Callback> privCallbacks = callbacks;
+        callbacks = new ArrayList<>();
+        privCallbacks.forEach(this::sendUpdate);
     }
 
     public void subscribe(Callback c) {

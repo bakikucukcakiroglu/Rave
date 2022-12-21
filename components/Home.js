@@ -21,7 +21,11 @@ const Home = ({navigation, route}) => {
   const [visible, setVisible] = useState(false);
   const [rooms, setRooms] = useState([]);
 
-  ConnectionModel.subscribeToServerList(setRooms);
+  const serversUpdate = s => {
+    setRooms(s);
+    ConnectionModel.subscribeToServerList(serversUpdate);
+  };
+  ConnectionModel.subscribeToServerList(serversUpdate);
 
   const onPressBack = () => {
     navigation.setParams({

@@ -12,12 +12,9 @@
   "dependencies": {
     "@react-navigation/native": "^6.1.1",
     "@react-navigation/native-stack": "^6.9.6",
-    "lottie-ios": "^3.4.0",
-    "lottie-react-native": "^5.1.4",
     "react": "18.1.0",
     "react-native": "0.70.6",
     "react-native-animated-loader": "^1.0.0",
-    "react-native-lottie-loader": "^1.0.0",
     "react-native-paper": "^5.0.2",
     "react-native-safe-area-context": "^4.4.1",
     "react-native-screens": "^3.18.2",
