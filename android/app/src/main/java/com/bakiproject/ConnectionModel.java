@@ -19,6 +19,7 @@ import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 
 public class ConnectionModel extends ReactContextBaseJavaModule {
@@ -33,17 +34,24 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     BroadcastServer broadcastServer = null;
     CommunicationServer communicationServer = null;
 
+    final DeviceEventManagerModule.RCTDeviceEventEmitter emitter;
+
     ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap, Collections.emptySet());
     ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap, State.READY);
     ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap, Collections.emptySet());
 
 
     public ConnectionModel(ReactApplicationContext context) {
+        emitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
         try {
             broadcastClient = new BroadcastClient(serverListObservable);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        serverListObservable.subscribe(list -> emitter.emit("serverListChange", list));
+        stateObservable.subscribe(state -> emitter.emit("stateChange", state));
+        userListObservable.subscribe(list -> emitter.emit("userListChange", list));
     }
 
     @NonNull
@@ -107,20 +115,5 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         communicationClient.close();
         communicationClient = null;
         stateObservable.accept(State.READY);
-    }
-
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public void subscribeToServerList(Callback onServersChanged) {
-        serverListObservable.subscribe(onServersChanged);
-    }
-
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public void subscribeToState(Callback onStateChanged) {
-        stateObservable.subscribe(onStateChanged);
-    }
-
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public void subscribeToUserList(Callback onUserListChanged) {
-        userListObservable.subscribe(onUserListChanged);
     }
 }

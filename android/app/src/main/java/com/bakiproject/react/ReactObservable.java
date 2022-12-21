@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 public class ReactObservable<T> implements Consumer<T> {
     T state;
-    List<Callback> callbacks = new ArrayList<>();
+    List<Consumer<Object>> callbacks = new ArrayList<>();
     final Function<T, WritableWrapper> serialise;
 
     public ReactObservable(Function<T, WritableWrapper> serialise) {
@@ -32,13 +32,13 @@ public class ReactObservable<T> implements Consumer<T> {
         callbacks.forEach(this::sendUpdate);
     }
 
-    public void subscribe(Callback c) {
+    public void subscribe(Consumer<Object> c) {
         callbacks.add(c);
         sendUpdate(c);
     }
 
-    private void sendUpdate(Callback callback) {
-        callback.invoke(serialise.apply(state).getObj());
+    private void sendUpdate(Consumer<Object> callback) {
+        callback.accept(serialise.apply(state).getObj());
     }
 
     public T getState() {
