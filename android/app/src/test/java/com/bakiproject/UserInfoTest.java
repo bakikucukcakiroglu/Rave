@@ -1,4 +1,4 @@
-/*package com.bakiproject;
+package com.bakiproject;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,4 +24,4 @@ class UserInfoTest {
 
 
     }
-}*/
+}

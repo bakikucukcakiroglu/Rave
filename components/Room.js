@@ -21,7 +21,7 @@ const Room = ({navigation, route}) => {
   useEffect(() => {
     const interval = setInterval(() => {
       let u = ConnectionModel.getUserList();
-      u[0].server = true;
+      //u[0].server = true;
       setUsers(u);
       //alert(JSON.stringify(users))
     }, 1000);

@@ -43,13 +43,13 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap,
             Collections.emptySet());
 
-    public ConnectionModel(ReactApplicationContext context) {
+    public ConnectionModel(ReactApplicationContext context, MediaPlayer mp) {
+        this.mp = mp;
         try {
             broadcastClient = new BroadcastClient(serverListObservable);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        mp = MediaPlayer.create(context, R.raw.piano);
     }
 
     /*

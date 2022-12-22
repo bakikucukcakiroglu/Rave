@@ -5,6 +5,6 @@ public class BroadcastProtocol {
     public static final String ANNOUNCEMENT_HEADER = "ANNOUNCEMENT";
     public static final int BROADCAST_PORT = 4446;
 
-    public static final String BROADCAST_SERVER = "224.0.1.203";
+    public static final String BROADCAST_SERVER = "224.0.0.132";
 
 }

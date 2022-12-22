@@ -141,6 +141,7 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         if (isNewArchitectureEnabled()) {
             // We configure the CMake build only if you decide to opt-in for the New Architecture.
@@ -252,6 +253,11 @@ android {
     }
 }
 
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
 
@@ -273,7 +279,9 @@ dependencies {
         exclude group:'com.facebook.flipper'
     }
 
-    //implementation("org.junit.jupiter:junit-jupiter-api:5.0.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation "org.mockito:mockito-core:3.+"
 
     if (enableHermes) {
         //noinspection GradleDynamicVersion
