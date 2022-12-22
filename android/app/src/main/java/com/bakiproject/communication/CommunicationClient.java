@@ -5,6 +5,7 @@ import com.bakiproject.UserInfo;
 import com.bakiproject.broadcast.BroadcastClient;
 
 import java.io.IOException;
+import java.lang.reflect.Member;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 
 public class CommunicationClient {
     ClientConnection connection;
@@ -20,15 +22,18 @@ public class CommunicationClient {
     private final String username;
     final Consumer<Set<UserInfo>> onUsersReceived;
     private Runnable onConnectionClosed;
+    private LongConsumer startMusicAtTime;
 
     public CommunicationClient(InetAddress address,
                                int port,
                                String username,
                                Consumer<Set<UserInfo>> onUsersReceived,
-                               Runnable onConnectionClosed) throws IOException {
+                               Runnable onConnectionClosed,
+                               LongConsumer startMusicAtTime) throws IOException {
         this.username = username;
         this.onUsersReceived = onUsersReceived;
         this.onConnectionClosed = onConnectionClosed;
+        this.startMusicAtTime = startMusicAtTime;
         Socket socket = new Socket(address, port);
         connection = new ClientConnection(socket);
         new Thread(connection).start();
@@ -55,6 +60,8 @@ public class CommunicationClient {
                 }
             } else if (rawMsg instanceof Message.UsersListUpdateMessage) {
                 onUsersReceived.accept(((Message.UsersListUpdateMessage) rawMsg).users());
+            } else if (rawMsg instanceof Message.StartMusicAtTimeMessage) {
+                startMusicAtTime.accept(((Message.StartMusicAtTimeMessage) rawMsg).millisTimeStart());
             }
         }
 
