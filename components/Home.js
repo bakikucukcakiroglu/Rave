@@ -117,7 +117,7 @@ const Home = ({navigation, route}) => {
                   </View>
                   <Text>Current Member: {room.currentMembers}</Text>
 
-                  {openModalIp == room.ip && (
+                  {openModalIp == room.address && (
                     <View style={styles.centeredView}>
                       <Modal
                         animationType="slide"
