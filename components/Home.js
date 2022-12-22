@@ -42,8 +42,8 @@ const Home = ({navigation, route}) => {
     navigation.setParams({
       loading: true,
     });
-    setOpenModalIp('')
-    ConnectionModel.connectToServer(room.address, "test");
+    setOpenModalIp('');
+    ConnectionModel.connectToServer(room.address, 'test');
   };
 
   const createRoomOnPressHandler = () => {
@@ -90,16 +90,15 @@ const Home = ({navigation, route}) => {
                   <Title style={{marginTop: -5}}>{room.name} </Title>
                   <View style={styles.middleCard}>
                     <Text>Room IP: {room.address}</Text>
-                    
+
                     <Pressable
                       onPress={() => setOpenModalIp(room.address)}
-                      style={[styles.button, styles.buttonClose]}
-                    >
+                      style={[styles.button, styles.buttonClose]}>
                       <Text>{'  +  '}</Text>
                     </Pressable>
                   </View>
                   <Text>Current Member: {room.currentMembers}</Text>
-                  
+
                   {openModalIp == room.address && (
                     <View style={styles.centeredView}>
                       <Modal
@@ -131,7 +130,7 @@ const Home = ({navigation, route}) => {
                               <Pressable
                                 style={[styles.button, styles.buttonClose]}
                                 onPress={() => {
-                                  joinRoomOnPressHandler(room)
+                                  joinRoomOnPressHandler(room);
                                 }}>
                                 <Text style={styles.textStyle}>Yep!</Text>
                               </Pressable>
