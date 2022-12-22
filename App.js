@@ -39,11 +39,11 @@ export default function App() {
         break;
 
       case 'CONNECTED':
-        navigate('Room');
+        navigate('Room', {role: 'slave'});
         break;
 
       case 'SERVING':
-        navigate('Room', {loading: false, role: 'slave'});
+        navigate('Room', {role: 'master'});
         break;
     }
   }, [state]);

@@ -18,6 +18,14 @@ const {ConnectionModel} = NativeModules;
 const Room = ({navigation, route}) => {
   const [users, setUsers] = useState([]);
 
+  const leaveRoomOnPressHandler = () => {
+    if (route.params.role == 'slave') {
+      ConnectionModel.disconnectFromServer();
+    } else if (route.params.role == 'master') {
+      ConnectionModel.stopServer();
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       let u = ConnectionModel.getUserList();
@@ -42,7 +50,7 @@ const Room = ({navigation, route}) => {
           padding: 10,
           backgroundColor: '#2196F3',
         })}
-        onPress={() => ConnectionModel.disconnectFromServer()}>
+        onPress={() => leaveRoomOnPressHandler}>
         <Text style={styles.textStyle}>Leave Room</Text>
       </Pressable>
       <View style={styles.container}>
