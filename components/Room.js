@@ -21,7 +21,10 @@ const Room = ({navigation, route}) => {
   useEffect(() => {
     const interval = setInterval(() => {
       let u = ConnectionModel.getUserList();
-      //u[0].server = true;
+
+      if (u.length) {
+        u[0].server = true;
+      }
       setUsers(u);
       //alert(JSON.stringify(users))
     }, 1000);
@@ -68,32 +71,6 @@ const Room = ({navigation, route}) => {
                       </View>
                     </Card.Content>
                   </Card>
-                  <Card key={index} style={styles.card}>
-                    <Card.Content style={styles.cardContent}>
-                      <Title style={{marginTop: -5}}>
-                        {user.server && 'Host: '}
-                        {user.username}
-                      </Title>
-                      <View style={styles.middleCard}>
-                        <Text>
-                          {user.server ? 'Host IP' : 'User IP'}: {user.address}
-                        </Text>
-                      </View>
-                    </Card.Content>
-                  </Card>
-                  <Card key={3} style={styles.card}>
-                    <Card.Content style={styles.cardContent}>
-                      <Title style={{marginTop: -5}}>
-                        {user.server && 'Host: '}
-                        {user.username}
-                      </Title>
-                      <View style={styles.middleCard}>
-                        <Text>
-                          {user.server ? 'Host IP' : 'User IP'}: {user.address}
-                        </Text>
-                      </View>
-                    </Card.Content>
-                  </Card>
                 </View>
               )
             );
@@ -116,20 +93,6 @@ const Room = ({navigation, route}) => {
                 !user.server && (
                   <View>
                     <Card key={index} style={styles.card}>
-                      <Card.Content style={styles.cardContent}>
-                        <Title style={{marginTop: -5}}>
-                          {user.server && 'Host: '}
-                          {user.username}
-                        </Title>
-                        <View style={styles.middleCard}>
-                          <Text>
-                            {user.server ? 'Host IP' : 'User IP'}:{' '}
-                            {user.address}
-                          </Text>
-                        </View>
-                      </Card.Content>
-                    </Card>
-                    <Card key={user.address} style={styles.card}>
                       <Card.Content style={styles.cardContent}>
                         <Title style={{marginTop: -5}}>
                           {user.server && 'Host: '}
