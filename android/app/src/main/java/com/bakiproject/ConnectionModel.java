@@ -1,5 +1,7 @@
 package com.bakiproject;
 
+import android.media.MediaPlayer;
+
 import androidx.annotation.NonNull;
 
 import com.bakiproject.broadcast.BroadcastClient;
@@ -10,7 +12,9 @@ import com.bakiproject.communication.CommunicationServer;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
+import java.util.Timer;
 
 import com.bakiproject.react.ReactObservable;
 import com.bakiproject.react.WritableWrapper;
@@ -33,7 +37,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     BroadcastServer broadcastServer = null;
     CommunicationServer communicationServer = null;
 
-    DeviceEventManagerModule.RCTDeviceEventEmitter emitter;
+    final MediaPlayer mp;
 
     ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap,
             Collections.emptySet());
@@ -47,13 +51,14 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        mp = MediaPlayer.create(context, R.raw.piano);
     }
 
     /*
      * @Override
      * public void initialize() {
      * super.initialize();
-     * 
+     *
      * serverListObservable.subscribe(list -> this
      * .getReactApplicationContext()
      * .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
@@ -83,10 +88,18 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
         try {
             broadcastServer = new BroadcastServer(roomName);
-            communicationServer = new CommunicationServer(roomName, username, clients -> {
-                broadcastServer.setCurrentMembers(clients.size());
-                userListObservable.accept(clients);
-            });
+            communicationServer = new CommunicationServer(
+                    roomName,
+                    username,
+                    clients -> {
+                        broadcastServer.setCurrentMembers(clients.size());
+                        userListObservable.accept(clients);
+                    },
+                    time->{
+                        Timer timer = new Timer();
+                        //timer.schedule();
+                    }
+                    );
             stateObservable.accept(State.SERVING);
         } catch (IOException e) {
             System.out.println(e);
@@ -114,7 +127,8 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                     InetAddress.getByName(addr),
                     8000,
                     username,
-                    userListObservable);
+                    userListObservable,
+                    () -> stateObservable.accept(State.READY));
             stateObservable.accept(State.CONNECTED);
         } catch (IOException e) {
             System.out.println(e);
@@ -144,7 +158,6 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableArray getServerList() {
-        System.out.println(serverListObservable.getState());
         return WritableWrapper.wrap(serverListObservable.getState()).getObj();
     }
 }

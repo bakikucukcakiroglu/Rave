@@ -23,7 +23,7 @@ public class ReactObservable<T> implements Consumer<T> {
 
     @Override
     public void accept(T t) {
-        // state = t;
+        state = t;
         sendUpdates();
     }
 

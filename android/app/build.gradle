@@ -273,6 +273,8 @@ dependencies {
         exclude group:'com.facebook.flipper'
     }
 
+    implementation("org.junit.jupiter:junit-jupiter-api:5.0.1")
+
     if (enableHermes) {
         //noinspection GradleDynamicVersion
         implementation("com.facebook.react:hermes-engine:+") { // From node_modules

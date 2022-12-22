@@ -11,19 +11,19 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class Server implements ReactSerialisable {
-    private final InetAddress addr;
+    private final String addr;
     private final String name;
     private final int port;
     private final int currentMembers;
 
-    public Server(InetAddress addr, String name, int port, int currentMembers) {
+    public Server(String addr, String name, int port, int currentMembers) {
         this.addr = addr;
         this.name = name;
         this.port = port;
         this.currentMembers = currentMembers;
     }
 
-    public static Optional<Server> fromMessage(InetAddress addr, String annStr) {
+    public static Optional<Server> fromMessage(String addr, String annStr) {
         String[] ann = annStr.split("\r\n");
         if (!BroadcastProtocol.ANNOUNCEMENT_HEADER.equals(ann[0])) return Optional.empty();
         return Optional.of(new Server(addr, ann[1], Integer.parseInt(ann[2]), Integer.parseInt(ann[3])));
@@ -33,7 +33,7 @@ public final class Server implements ReactSerialisable {
         return BroadcastProtocol.ANNOUNCEMENT_HEADER + "\r\n" + name + "\r\n" + port + "\r\n" + currentMembers;
     }
 
-    public InetAddress addr() {
+    public String addr() {
         return addr;
     }
 
@@ -78,7 +78,7 @@ public final class Server implements ReactSerialisable {
     public WritableWrapper toReact() {
         WritableMap map = Arguments.createMap();
         map.putString("name", name);
-        map.putString("address", addr.getHostAddress());
+        map.putString("address", addr);
         map.putInt("currentMembers", currentMembers);
         return WritableWrapper.wrap(map);
     }

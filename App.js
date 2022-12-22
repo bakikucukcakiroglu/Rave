@@ -1,39 +1,54 @@
 import {React, useState, useEffect} from 'react';
-import {Text, Button} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {Text, Button, NativeModules} from 'react-native';
+import {NavigationContainer, createNavigationContainerRef} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Home from './components/Home';
 import Room from './components/Room';
 import CreateRoom from './components/CreateRoom';
 
 const Stack = createNativeStackNavigator();
+const navigationRef = createNavigationContainerRef()
+function navigate(name, params) {
+  if (navigationRef.isReady()) {
+    navigationRef.navigate(name, params);
+  }
+}
+
+
+const {ConnectionModel} = NativeModules;
 
 export default function App() {
-  const [status, setStatus] = useState();
+
+  const [state, setState] = useState();
 
   useEffect(() => {
-    switch (status) {
-      case 'READY':
-        navigation.navigate('Home', {loading: true});
+    const interval = setInterval(() => {
+      setState(ConnectionModel.getState());
+    }, 500);
 
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    switch (state) {
+      case 'READY':
+        navigate('Home', {loading: false});
         break;
 
       case 'CONNECTED':
-        navigation.setParams({
-          query: 'someText',
-        });
-        navigation.navigate('Room');
-
+        navigate('Room');
         break;
 
       case 'SERVING':
-        navigation.navigate('Room', {loading: false, role: 'slave'});
+        navigate('Room', {loading: false, role: 'slave'});
         break;
     }
-  }, [status]);
+  }, [state]);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         <Stack.Screen
           name="Home"

@@ -47,5 +47,5 @@ public abstract class Connection implements Runnable {
 
     abstract void messageReceived(Message message);
 
-    void onStopped(){}
+    abstract void onStopped();
 }

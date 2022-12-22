@@ -21,7 +21,7 @@ public class BroadcastServer {
             while (isOpen) {
                 doBroadcast();
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

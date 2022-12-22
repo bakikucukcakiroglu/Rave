@@ -22,26 +22,6 @@ const Home = ({navigation, route}) => {
   const [visible, setVisible] = useState(false);
   const [rooms, setRooms] = useState([]);
 
-  const onPressBack = () => {
-    navigation.setParams({
-      loading: false,
-    });
-  };
-
-  const data = [
-    {ip: '192.168.1.1', room_name: 'Room 1', current_members: 2},
-    {ip: '192.168.1.2', room_name: 'Room 2', current_members: 2},
-    {ip: '192.168.1.3', room_name: 'Room 3', current_members: 3},
-    {ip: '192.168.1.4', room_name: 'Room 4', current_members: 4},
-    {ip: '192.168.1.5', room_name: 'Room 5', current_members: 4},
-    {ip: '192.168.1.6', room_name: 'Room 6', current_members: 4},
-    {ip: '192.168.1.7', room_name: 'Room 7', current_members: 4},
-    {ip: '192.168.1.8', room_name: 'Room 8', current_members: 4},
-    {ip: '192.168.1.9', room_name: 'Room 9', current_members: 4},
-    {ip: '192.168.1.10', room_name: 'Room 10', current_members: 4},
-    {ip: '192.168.1.11', room_name: 'Room 11', current_members: 4},
-  ];
-
   useEffect(() => {
     const interval = setInterval(() => {
       setRooms(ConnectionModel.getServerList());
@@ -59,13 +39,22 @@ const Home = ({navigation, route}) => {
   }, [route.params?.loading]);
 
   const joinRoomOnPressHandler = room => {
-    //setText(ConnectionModel.thirtyOne());
-    //alert(JSON.stringify(ConnectionModel.getAvailableServers()));
+    navigation.setParams({
+      loading: true,
+    });
+    setOpenModalIp('')
+    ConnectionModel.connectToServer(room.address, "test");
   };
 
   const createRoomOnPressHandler = () => {
-    //ConnectionModel.startServer();
     navigation.navigate('Create Room', {name: 'Jane'});
+  };
+
+  const onPressBack = () => {
+    ConnectionModel.disconnectFromServer();
+    navigation.setParams({
+      loading: false,
+    });
   };
 
   return visible ? (
@@ -101,23 +90,17 @@ const Home = ({navigation, route}) => {
                   <Title style={{marginTop: -5}}>{room.name} </Title>
                   <View style={styles.middleCard}>
                     <Text>Room IP: {room.address}</Text>
+                    
                     <Pressable
                       onPress={() => setOpenModalIp(room.address)}
-                      style={({pressed}) => ({
-                        opacity: pressed ? 0.5 : 1,
-                      })}>
-                      {/* <AntDesign
-                      name="adduser"
-                      size={24}
-                      color="black"
-                      style={{marginRight: 15}}
-                    /> */}
-                      <Text>{'+'}</Text>
+                      style={[styles.button, styles.buttonClose]}
+                    >
+                      <Text>{'  +  '}</Text>
                     </Pressable>
                   </View>
                   <Text>Current Member: {room.currentMembers}</Text>
-
-                  {openModalIp == room.ip && (
+                  
+                  {openModalIp == room.address && (
                     <View style={styles.centeredView}>
                       <Modal
                         animationType="slide"
@@ -130,7 +113,7 @@ const Home = ({navigation, route}) => {
                         <View style={styles.centeredView}>
                           <View style={styles.modalView}>
                             <Text style={styles.modalText}>
-                              {'Do you want to join ' + room.room_name + ' ?'}
+                              {'Do you want to join ' + room.name + '?'}
                             </Text>
                             <View
                               style={{
@@ -148,9 +131,7 @@ const Home = ({navigation, route}) => {
                               <Pressable
                                 style={[styles.button, styles.buttonClose]}
                                 onPress={() => {
-                                  navigation.setParams({
-                                    loading: true,
-                                  });
+                                  joinRoomOnPressHandler(room)
                                 }}>
                                 <Text style={styles.textStyle}>Yep!</Text>
                               </Pressable>
