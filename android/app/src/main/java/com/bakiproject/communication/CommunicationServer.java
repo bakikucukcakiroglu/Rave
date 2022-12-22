@@ -1,5 +1,6 @@
 package com.bakiproject.communication;
 
+import com.bakiproject.ManyToOneBarrier;
 import com.bakiproject.UserInfo;
 
 import java.net.*;
@@ -22,6 +23,8 @@ public class CommunicationServer {
     private final String username;
     private final Consumer<Set<UserInfo>> onClientConnected;
     private LongConsumer startMusicAtTime;
+
+    private final ManyToOneBarrier barrier = new ManyToOneBarrier();
 
     public CommunicationServer(String roomName, String username, Consumer<Set<UserInfo>> onClientConnected, LongConsumer startMusicAtTime) {
         this.username = username;
@@ -51,15 +54,30 @@ public class CommunicationServer {
         isOpen = false;
         try {
             server.close();
+            connections.forEach(Connection::close);
         } catch (IOException e) {
             System.err.println(e);
         }
     }
 
-    public void refreshTimings() throws IOException {
-        for (ServerConnection connection : connections) {
-            connection.sendRefreshTimingsMessage();
-        }
+    public void asyncDoStartMusicSequence() {
+        new Thread(() -> {
+            try {
+                barrier.setValue(connections.size());
+                for (ServerConnection connection : connections) {
+                    connection.sendRefreshTimingsMessage();
+                }
+                barrier.waitForOthers();
+                long musicTime = System.currentTimeMillis() + 1000;
+                for (ServerConnection connection : connections) {
+                    connection.sendStartMusicAtMessage(musicTime);
+                }
+                startMusicAtTime.accept(musicTime);
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        });
     }
 
     private class ServerConnection extends Connection {
@@ -77,7 +95,8 @@ public class CommunicationServer {
                 Message.GetTimeResponse msg = (Message.GetTimeResponse) rawMsg;
                 long ctm = System.currentTimeMillis();
                 timeDifference = (ctm + msg.millisTimeRequestSent()) / 2 - msg.millisTimeResponseSent();
-                System.out.printf("Time difference: %d%n", timeDifference);
+
+                barrier.notifyFinished();
             } else if (rawMsg instanceof Message.UserIntroMessage) {
                 userInfo = new UserInfo(((Message.UserIntroMessage) rawMsg).info(), address.getHostAddress());
                 connections.add(this);
@@ -92,6 +111,7 @@ public class CommunicationServer {
         }
 
         void sendRefreshTimingsMessage() throws IOException {
+            timeDifference = Long.MAX_VALUE;
             sendMessage(new Message.GetTimeMessage());
         }
 
@@ -115,10 +135,16 @@ public class CommunicationServer {
         void onStopped() {
             connections.remove(this);
             sendUserListMessage();
+            if (timeDifference == Long.MAX_VALUE)
+                barrier.notifyFinished();
         }
 
         UserInfo getUserInfo() {
             return userInfo;
+        }
+
+        public void sendStartMusicAtMessage(long musicTime) throws IOException {
+            sendMessage(new Message.StartMusicAtTimeMessage(musicTime - timeDifference));
         }
     }
 }

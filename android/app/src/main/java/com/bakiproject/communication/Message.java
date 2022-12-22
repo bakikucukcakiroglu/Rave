@@ -19,8 +19,8 @@ public interface Message extends Serializable {
         }
 
         public GetTimeMessage() {
-                this(System.currentTimeMillis());
-            }
+            this(System.currentTimeMillis());
+        }
 
         public long millisTimeSent() {
             return millisTimeSent;
@@ -46,7 +46,7 @@ public interface Message extends Serializable {
                     "millisTimeSent=" + millisTimeSent + ']';
         }
 
-        }
+    }
 
     final class GetTimeResponse implements Message {
         private static final long serialVersionUID = 0L;
@@ -158,6 +158,40 @@ public interface Message extends Serializable {
         public String toString() {
             return "UsersListUpdateMessage[" +
                     "users=" + users + ']';
+        }
+
+    }
+
+    final class StartMusicAtTimeMessage implements Message {
+        private static final long serialVersionUID = 0L;
+        private final long millisTimeStart;
+
+        public StartMusicAtTimeMessage(long millisTimeSent) {
+            this.millisTimeStart = millisTimeSent;
+        }
+
+        public long millisTimeStart() {
+            return millisTimeStart;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            StartMusicAtTimeMessage that = (StartMusicAtTimeMessage) obj;
+            return this.millisTimeStart == that.millisTimeStart;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(millisTimeStart);
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "GetTimeMessage[" +
+                    "millisTimeStart=" + millisTimeStart + ']';
         }
 
     }

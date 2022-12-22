@@ -11,10 +11,9 @@ import com.bakiproject.communication.CommunicationServer;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.time.Clock;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Set;
-import java.util.Timer;
 
 import com.bakiproject.react.ReactObservable;
 import com.bakiproject.react.WritableWrapper;
@@ -22,7 +21,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableArray;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 public class ConnectionModel extends ReactContextBaseJavaModule {
 
@@ -80,6 +78,19 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         return "ConnectionModel";
     }
 
+    private void startMusicAtTime(long time) {
+        new Thread(() -> {
+            while (Clock.systemUTC().millis() < time) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            mp.start();
+        });
+    }
+
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void startServer(String roomName, String username) {
         if (stateObservable.getState() != State.READY) {
@@ -95,10 +106,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                         broadcastServer.setCurrentMembers(clients.size());
                         userListObservable.accept(clients);
                     },
-                    time->{
-                        Timer timer = new Timer();
-                        //timer.schedule();
-                    }
+                    this::startMusicAtTime
                     );
             stateObservable.accept(State.SERVING);
         } catch (IOException e) {
@@ -128,7 +136,8 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                     8000,
                     username,
                     userListObservable,
-                    () -> stateObservable.accept(State.READY));
+                    () -> stateObservable.accept(State.READY),
+                    this::startMusicAtTime);
             stateObservable.accept(State.CONNECTED);
         } catch (IOException e) {
             System.out.println(e);
@@ -144,6 +153,15 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         communicationClient.close();
         communicationClient = null;
         stateObservable.accept(State.READY);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public void startMusic(){
+        if (stateObservable.getState() != State.SERVING) {
+            return;
+        }
+
+        communicationServer.asyncDoStartMusicSequence();
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
