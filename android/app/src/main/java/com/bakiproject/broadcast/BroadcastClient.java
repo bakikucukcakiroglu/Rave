@@ -54,18 +54,17 @@ public class BroadcastClient {
 
                     HashSet<Server> announcements = new HashSet<>();
 
-                    while (Clock.systemUTC().millis() - time_millis < 5000) {
+                    while (Clock.systemUTC().millis() - time_millis < 2000) {
                         socket.receive(packet2);
                         //System.out.println(packet2.getAddress());
                         String message = new String(packet2.getData(), packet2.getOffset(), packet2.getLength()).trim();
-                        Optional<Server> announcement = Server.fromMessage(packet2.getAddress(), message);
+                        Optional<Server> announcement = Server.fromMessage(packet2.getAddress().getHostAddress(), message);
                         announcement.ifPresent(announcements::add);
                     }
 
                     availableServers = announcements;
                     onServerListChanged.accept(availableServers);
-                    Thread.sleep(5000);
-                } catch (IOException | InterruptedException e) {
+                } catch (IOException e) {
                     isRunning = false;
                 }
             }

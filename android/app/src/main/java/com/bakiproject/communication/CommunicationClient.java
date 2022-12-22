@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 public class CommunicationClient {
@@ -18,38 +19,24 @@ public class CommunicationClient {
 
     private final String username;
     final Consumer<Set<UserInfo>> onUsersReceived;
+    private Runnable onConnectionClosed;
 
-    public CommunicationClient(InetAddress address, int port, String username, Consumer<Set<UserInfo>> onUsersReceived) throws IOException {
+    public CommunicationClient(InetAddress address,
+                               int port,
+                               String username,
+                               Consumer<Set<UserInfo>> onUsersReceived,
+                               Runnable onConnectionClosed) throws IOException {
         this.username = username;
         this.onUsersReceived = onUsersReceived;
+        this.onConnectionClosed = onConnectionClosed;
         Socket socket = new Socket(address, port);
         connection = new ClientConnection(socket);
-        connection.run();
+        new Thread(connection).start();
     }
 
     public void close() {
         connection.close();
-    }
-
-
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        BroadcastClient client = new BroadcastClient(a->{});
-        Thread.sleep(7000);
-
-        List<Server> announcements = new ArrayList<>(client.getAvailableServers());
-        for (int i = 0; i < announcements.size(); i++) {
-            System.out.printf("%d: %s%n", i, announcements.get(i));
-        }
-        System.out.print("Pick: ");
-        int i = new Scanner(System.in).nextInt();
-        System.out.println(i);
-        InetAddress addr = announcements.get(i).addr();
-        new CommunicationClient(addr, 8000, "asd", a->{});
-        System.out.print("Done at addr:");
-        System.out.println(addr);
-        //noinspection ResultOfMethodCallIgnored
-        System.in.read();
+        onConnectionClosed.run();
     }
 
     private class ClientConnection extends Connection {
@@ -69,6 +56,11 @@ public class CommunicationClient {
             } else if (rawMsg instanceof Message.UsersListUpdateMessage) {
                 onUsersReceived.accept(((Message.UsersListUpdateMessage) rawMsg).users());
             }
+        }
+
+        @Override
+        void onStopped() {
+            onConnectionClosed.run();
         }
     }
 }

@@ -1,15 +1,25 @@
-import {Text, Pressable, View, ScrollView, StyleSheet} from 'react-native';
+import {Text, Pressable, View, ScrollView, StyleSheet, NativeModules} from 'react-native';
 import {Card, Title} from 'react-native-paper';
 
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
+
+const {ConnectionModel} = NativeModules;
 
 const Room = ({navigation, route}) => {
   const [users, setUsers] = useState([]);
-  const data = [
-    {ip: '192.168.1.1', user_name: 'User 1', current_members: 2},
-    {ip: '192.168.1.2', user_name: 'User 2', current_members: 2},
-    {ip: '192.168.1.3', user_name: 'User 3', current_members: 3},
-  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let u = ConnectionModel.getUserList()
+      u[0].server = true;
+      setUsers(u);
+      //alert(JSON.stringify(users))
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <View>
@@ -19,19 +29,19 @@ const Room = ({navigation, route}) => {
           padding: 10,
           backgroundColor: '#2196F3',
         })}
-        //onPress={}
+        onPress={()=>ConnectionModel.disconnectFromServer()}
       >
         <Text style={styles.textStyle}>Leave Room</Text>
       </Pressable>
       <ScrollView>
         <View style={styles.container}>
-          {data.map(user => {
+          {users.map(user => {
             return (
-              <Card key={user.ip} style={styles.card}>
+              <Card key={user.address} style={styles.card}>
                 <Card.Content style={styles.cardContent}>
-                  <Title style={{marginTop: -5}}>{user.user_name} </Title>
+                  <Title style={{marginTop: -5}}>{user.server && "Host: "}{user.username}</Title>
                   <View style={styles.middleCard}>
-                    <Text>User IP: {user.ip}</Text>
+                    <Text>User IP: {user.address}</Text>
                   </View>
                 </Card.Content>
               </Card>
