@@ -1,24 +1,25 @@
 import {React, useState, useEffect} from 'react';
 import {Text, Button, NativeModules} from 'react-native';
-import {NavigationContainer, createNavigationContainerRef} from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Home from './components/Home';
 import Room from './components/Room';
 import CreateRoom from './components/CreateRoom';
 
 const Stack = createNativeStackNavigator();
-const navigationRef = createNavigationContainerRef()
+const navigationRef = createNavigationContainerRef();
 function navigate(name, params) {
   if (navigationRef.isReady()) {
     navigationRef.navigate(name, params);
   }
 }
 
-
 const {ConnectionModel} = NativeModules;
 
 export default function App() {
-
   const [state, setState] = useState();
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function App() {
   useEffect(() => {
     switch (state) {
       case 'READY':
-        navigate('Home', {loading: false});
+        navigate('Rave', {loading: false});
         break;
 
       case 'CONNECTED':
@@ -51,7 +52,7 @@ export default function App() {
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         <Stack.Screen
-          name="Home"
+          name="Rave"
           component={Home}
           initialParams={{itemId: 42}}
         />

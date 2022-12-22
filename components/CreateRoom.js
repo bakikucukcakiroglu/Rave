@@ -23,7 +23,7 @@ const CreateRoom = ({navigation}) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleSubmitCreateRoom = () => {
-    //ConnectionModel.startServer(roomName, userName);
+    ConnectionModel.startServer(roomName, userName);
   };
 
   return (
@@ -66,10 +66,11 @@ const CreateRoom = ({navigation}) => {
           visibleRest={1}
           selectedIndex={roomCapacity}
           itemHeight={40}
-          options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+          options={[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
           onChange={index => setSelectedIndex(index)}
           containerStyle={{
             borderColor: 'black',
+            borderWidth: 1,
             marginLeft: 15,
             marginRight: 15,
             borderRadius: 10,

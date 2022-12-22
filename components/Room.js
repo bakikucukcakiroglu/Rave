@@ -1,5 +1,15 @@
-import {Text, Pressable, View, ScrollView, StyleSheet, NativeModules} from 'react-native';
+import {
+  Text,
+  Pressable,
+  View,
+  ScrollView,
+  StyleSheet,
+  NativeModules,
+  VirtualizedList,
+} from 'react-native';
 import {Card, Title} from 'react-native-paper';
+
+import Icon from 'react-native-vector-icons/Ionicons';
 
 import {useState, useEffect} from 'react';
 
@@ -10,7 +20,7 @@ const Room = ({navigation, route}) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      let u = ConnectionModel.getUserList()
+      let u = ConnectionModel.getUserList();
       u[0].server = true;
       setUsers(u);
       //alert(JSON.stringify(users))
@@ -29,26 +39,117 @@ const Room = ({navigation, route}) => {
           padding: 10,
           backgroundColor: '#2196F3',
         })}
-        onPress={()=>ConnectionModel.disconnectFromServer()}
-      >
+        onPress={() => ConnectionModel.disconnectFromServer()}>
         <Text style={styles.textStyle}>Leave Room</Text>
       </Pressable>
-      <ScrollView>
-        <View style={styles.container}>
-          {users.map(user => {
+      <View style={styles.container}>
+        <View
+          style={{flex: 1, borderWidth: 5, borderColor: 'purple', zIndex: 100}}>
+          {users.map((user, index) => {
             return (
-              <Card key={user.address} style={styles.card}>
-                <Card.Content style={styles.cardContent}>
-                  <Title style={{marginTop: -5}}>{user.server && "Host: "}{user.username}</Title>
-                  <View style={styles.middleCard}>
-                    <Text>User IP: {user.address}</Text>
-                  </View>
-                </Card.Content>
-              </Card>
+              user.server && (
+                <View
+                  style={{
+                    height: '100%',
+                    borderWidth: 5,
+                    borderColor: 'purple',
+                    zIndex: 100,
+                  }}>
+                  <Card key={user.address} style={styles.card}>
+                    <Card.Content style={styles.cardContent}>
+                      <Title style={{marginTop: -5}}>
+                        {user.server && 'Host: '}
+                        {user.username}
+                      </Title>
+                      <View style={styles.middleCard}>
+                        <Text>
+                          {user.server ? 'Host IP' : 'User IP'}: {user.address}
+                        </Text>
+                      </View>
+                    </Card.Content>
+                  </Card>
+                  <Card key={index} style={styles.card}>
+                    <Card.Content style={styles.cardContent}>
+                      <Title style={{marginTop: -5}}>
+                        {user.server && 'Host: '}
+                        {user.username}
+                      </Title>
+                      <View style={styles.middleCard}>
+                        <Text>
+                          {user.server ? 'Host IP' : 'User IP'}: {user.address}
+                        </Text>
+                      </View>
+                    </Card.Content>
+                  </Card>
+                  <Card key={3} style={styles.card}>
+                    <Card.Content style={styles.cardContent}>
+                      <Title style={{marginTop: -5}}>
+                        {user.server && 'Host: '}
+                        {user.username}
+                      </Title>
+                      <View style={styles.middleCard}>
+                        <Text>
+                          {user.server ? 'Host IP' : 'User IP'}: {user.address}
+                        </Text>
+                      </View>
+                    </Card.Content>
+                  </Card>
+                </View>
+              )
             );
           })}
+          <View>
+            <Text>{'sdfa'}</Text>
+            <Icon name="md-play-outline" size={30} color="#2196F3" />
+          </View>
         </View>
-      </ScrollView>
+        <ScrollView
+          style={{
+            height: '100%',
+            top: '40%',
+            borderWidth: 1,
+            borderColor: 'red',
+          }}>
+          <View>
+            {users.map((user, index) => {
+              return (
+                !user.server && (
+                  <View>
+                    <Card key={index} style={styles.card}>
+                      <Card.Content style={styles.cardContent}>
+                        <Title style={{marginTop: -5}}>
+                          {user.server && 'Host: '}
+                          {user.username}
+                        </Title>
+                        <View style={styles.middleCard}>
+                          <Text>
+                            {user.server ? 'Host IP' : 'User IP'}:{' '}
+                            {user.address}
+                          </Text>
+                        </View>
+                      </Card.Content>
+                    </Card>
+                    <Card key={user.address} style={styles.card}>
+                      <Card.Content style={styles.cardContent}>
+                        <Title style={{marginTop: -5}}>
+                          {user.server && 'Host: '}
+                          {user.username}
+                        </Title>
+                        <View style={styles.middleCard}>
+                          <Text>
+                            {user.server ? 'Host IP' : 'User IP'}:{' '}
+                            {user.address}
+                          </Text>
+                        </View>
+                      </Card.Content>
+                    </Card>
+                  </View>
+                )
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 };
@@ -66,12 +167,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   cardContent: {},
-  middleCard: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
+  container: {
+    height: '100%',
+    borderWidth: 15,
+    borderColor: 'purple',
+    zIndex: 100,
   },
+
   centeredView: {
     flex: 1,
     justifyContent: 'center',
@@ -104,7 +206,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'flex-start',
   },
-  container: {},
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  },
   button: {
     borderRadius: 20,
     padding: 10,
