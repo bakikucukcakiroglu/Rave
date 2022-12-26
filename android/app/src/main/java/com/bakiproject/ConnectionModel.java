@@ -52,7 +52,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     public ConnectionModel(ReactApplicationContext context, MediaPlayer mp) {
         this.mp = mp;
-
+        mp.start();
         try {
             broadcastClient = new BroadcastClient();
             serverListObservable = broadcastClient.getServerListUpdatesStream();
@@ -205,7 +205,6 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
         communicationServer.doControlMusicSequence(MusicState.PAUSED);
     }
-
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void stopMusic() {

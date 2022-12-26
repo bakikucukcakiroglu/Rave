@@ -8,6 +8,7 @@ import com.bakiproject.ConnectionModel;
 import com.bakiproject.UserInfo;
 import com.bakiproject.streams.StatefulObservable;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.verification.VerificationMode;
@@ -15,6 +16,8 @@ import org.mockito.verification.VerificationMode;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unchecked")
@@ -24,13 +27,21 @@ class CommunicationTest {
 
     StatefulObservable<Set<UserInfo>> serverUserInfoUpdates;
 
+    static Lock sequential = new ReentrantLock();
+
+    @AfterEach
+    protected void tearDown() throws Exception {
+        sequential.unlock();
+    }
+
     @BeforeEach
     void setUp() {
+        sequential.lock();
         server = new CommunicationServer("test", "admin");
         serverUserInfoUpdates = server.getUserInfoUpdatesStream();
     }
 
-    //@Test
+    // @Test
     void connectDisconnectTest() throws IOException, InterruptedException {
         assertEquals(1, serverUserInfoUpdates.getState().size());
 
@@ -49,13 +60,13 @@ class CommunicationTest {
         assertEquals(3, c2.getUserInfoUpdatesStream().getState().size());
 
         c2.close();
-        Thread.sleep(10000);
+        Thread.sleep(5000);
         assertEquals(2, serverUserInfoUpdates.getState().size());
         assertEquals(2, c1.getUserInfoUpdatesStream().getState().size());
 
     }
 
-    //@Test
+    // @Test
     void doStartMusicSequence() throws InterruptedException, IOException {
         Thread.sleep(1000);
         CommunicationClient c1 = new CommunicationClient(InetAddress.getByName("localhost"), 8000, "c1");

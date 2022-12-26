@@ -1,5 +1,7 @@
 import React, { useState , useEffect} from "react";
-import { View, Text, StyleSheet, Button, FlatList ,  NativeModules,} from "react-native";
+import { View, Text, StyleSheet, Button, FlatList ,  NativeModules,Pressable} from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
+
 const {ConnectionModel} = NativeModules;
 
 
@@ -42,7 +44,8 @@ const mockUserData = [
 ];
 
 const Room = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [users, setUsers] = useState([]);
 
   const handlePlayPress = () => {
     setIsPlaying(true);
@@ -57,21 +60,84 @@ const Room = () => {
   };
 
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUsers(ConnectionModel.getUserList());
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+  
+
+
 
   return (
     <View style={styles.container}>
-      <View style={styles.buttonContainer}>
-        <Button title="Play" onPress={handlePlayPress} />
-        <Button title="Stop" onPress={handleStopPress} />
-      </View>
+      {!isPlaying ? (<View style={styles.buttonContainer}>
+        <Pressable
+          style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: "#2196F3",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center"
+          }}
+          onPress={handlePlayPress}
+        >
+          <Icon name="play" size={50} color="white" />
+        </Pressable>
+      </View>)
+       :(<View style={styles.buttonContainer}>
+         <Pressable
+          style={{
+            flex:1,
+            height: "100%",
+            backgroundColor: "gray",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRightWidth :1,
+            borderColor:"white",
+          }}
+          onPress={handleStopPress}
+        >
+          <Icon name="stop" size={50} color="white" />
+        </Pressable>
+        <View></View>
+          <Pressable
+          style={{
+            flex:1,
+            height: "100%",
+            backgroundColor: "gray",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+     
+         
+            //borderStyle:"solid"
+          }}
+          onPress={handleStopPress}
+        >
+          <Icon name="pause" size={50} color="white" />
+        </Pressable>
+      </View>)}
+       
+      {users.find((user) => !user.address) &&
+      <View style={styles.cardContainerHost}>
+        <Text style={styles.cardText}>
+            <Icon name="home" size={20} color="black" /> {"  "}{users.find((user) => !user.address).username}</Text>
+      </View>}
       <FlatList
-        data={mockUserData}
+        data={users.filter((user)=> user.address)}
         style={styles.flatList}
-        keyExtractor={(item) => item.id}
+        // keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.cardContainer}>
-            <Text style={styles.cardText}>{item.name}</Text>
-            <Text style={styles.cardText}>{item.age}</Text>
+            <Text style={styles.cardText}>{item.username}</Text>
+            <Text style={styles.cardText}>{item.address}</Text>
           </View>
         )}
       />
@@ -102,8 +168,23 @@ const styles = StyleSheet.create({
     borderColor: "green",
 
   },
+   cardContainerHost: {
+    height:"10%",
+    padding: 16,
+    margin: 8,
+    backgroundColor: "#fff",
+    borderRadius: 1,
+    borderColor: "blue",
+    border:"solid",
+    display:"flex",
+    flexDirection:"row",
+    justifyContent:"space-between",
+    alignItems:"center"
+
+  },
   cardText: {
-    fontSize: 18
+    fontSize: 18,
+
   },
   flatList: {
     flex: 1
