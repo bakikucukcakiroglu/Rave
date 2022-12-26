@@ -3,12 +3,19 @@ package com.bakiproject.communication;
 import com.bakiproject.Server;
 import com.bakiproject.UserInfo;
 import com.bakiproject.broadcast.BroadcastClient;
+import com.bakiproject.streams.Observable;
+import com.bakiproject.streams.Single;
+import com.bakiproject.streams.SingleSubject;
+import com.bakiproject.streams.StatefulObservable;
+import com.bakiproject.streams.StatefulSubject;
+import com.bakiproject.streams.Subject;
 
 import java.io.IOException;
 import java.lang.reflect.Member;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -17,57 +24,76 @@ import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 
 public class CommunicationClient {
-    ClientConnection connection;
+    Connection connection;
 
-    private final String username;
-    final Consumer<Set<UserInfo>> onUsersReceived;
-    private Runnable onConnectionClosed;
-    private LongConsumer startMusicAtTime;
+    /**
+     * User listemiz değiştiğinde streame yeni liste akıyor. Buraya yapılan tüm accept'ler
+     * messages thread'den geliyor
+     */
+    private final StatefulSubject<Set<UserInfo>> userInfoUpdatesStream
+            = new StatefulSubject<>(Collections.emptySet());
+
+    /**
+     * Bağlantı kopunca buraya bir event düşüyor. Haliyle bir defa yaşanabilir bu.
+     */
+    private final SingleSubject<Void> connectionLostEventStream
+            = new SingleSubject<>();
+
+
+    /**
+     * Ana sınıfa müziği başlat eventi yollamak istediğimizde buraya event atıyoruz.
+     */
+    private final Subject<Long> startMusicEventsStream = new Subject<>();
+
 
     public CommunicationClient(InetAddress address,
                                int port,
-                               String username,
-                               Consumer<Set<UserInfo>> onUsersReceived,
-                               Runnable onConnectionClosed,
-                               LongConsumer startMusicAtTime) throws IOException {
-        this.username = username;
-        this.onUsersReceived = onUsersReceived;
-        this.onConnectionClosed = onConnectionClosed;
-        this.startMusicAtTime = startMusicAtTime;
+                               String username) throws IOException {
+
         Socket socket = new Socket(address, port);
-        connection = new ClientConnection(socket);
-        new Thread(connection).start();
+        connection = new Connection(socket, false);
+
+        Observable<Message> messagesStream = connection.getMessageStream();
+
+        messagesStream
+                .filter(msg -> msg instanceof Message.GetTimeMessage)
+                .subscribe(msg -> {
+                    Message m = new Message.GetTimeResponse(((Message.GetTimeMessage) msg).millisTimeSent(), System.currentTimeMillis());
+                    connection.sendMessage(m);
+                });
+
+        messagesStream
+                .filter(msg -> msg instanceof Message.UsersListUpdateMessage)
+                .map(msg -> ((Message.UsersListUpdateMessage) msg).users())
+                .subscribe(userInfoUpdatesStream);
+
+        messagesStream
+                .filter(msg -> msg instanceof Message.StartMusicAtTimeMessage)
+                .map(msg -> ((Message.StartMusicAtTimeMessage) msg).millisTimeStart())
+                .subscribe(startMusicEventsStream);
+
+
+        messagesStream
+                .filter(msg -> msg instanceof Message.DisconnectMessage)
+                .subscribe(a -> connectionLostEventStream.accept(null));
+
+        connection.start();
+        connection.sendMessage(new Message.UserIntroMessage(username, null));
     }
 
     public void close() {
         connection.close();
-        onConnectionClosed.run();
     }
 
-    private class ClientConnection extends Connection {
-        public ClientConnection(Socket socket) throws IOException {
-            super(socket, false);
-            sendMessage(new Message.UserIntroMessage(username, null));
-        }
+    public StatefulObservable<Set<UserInfo>> getUserInfoUpdatesStream() {
+        return userInfoUpdatesStream;
+    }
 
-        @Override
-        void messageReceived(Message rawMsg) {
-            if (rawMsg instanceof Message.GetTimeMessage) {
-                try {
-                    sendMessage(new Message.GetTimeResponse(((Message.GetTimeMessage) rawMsg).millisTimeSent(), System.currentTimeMillis()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (rawMsg instanceof Message.UsersListUpdateMessage) {
-                onUsersReceived.accept(((Message.UsersListUpdateMessage) rawMsg).users());
-            } else if (rawMsg instanceof Message.StartMusicAtTimeMessage) {
-                startMusicAtTime.accept(((Message.StartMusicAtTimeMessage) rawMsg).millisTimeStart());
-            }
-        }
+    public Single<Void> getConnectionLostEventStream() {
+        return connectionLostEventStream;
+    }
 
-        @Override
-        void onStopped() {
-            onConnectionClosed.run();
-        }
+    public Observable<Long> getStartMusicEventsStream() {
+        return startMusicEventsStream;
     }
 }

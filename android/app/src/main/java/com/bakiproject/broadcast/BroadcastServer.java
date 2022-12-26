@@ -1,5 +1,7 @@
 package com.bakiproject.broadcast;
 
+import android.app.job.JobScheduler;
+
 import com.bakiproject.Server;
 
 import java.io.IOException;
@@ -32,7 +34,7 @@ public class BroadcastServer {
         broadcastSender.start();
     }
 
-    public void setCurrentMembers(int currentMembers){
+    public void setCurrentMembers(int currentMembers) {
         announcement = new Server(null, announcement.name(), 8000, currentMembers);
     }
 

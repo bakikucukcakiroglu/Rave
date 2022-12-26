@@ -1,53 +1,151 @@
 package com.bakiproject.communication;
 
+import android.util.Pair;
+
 import com.bakiproject.ManyToOneBarrier;
 import com.bakiproject.UserInfo;
+import com.bakiproject.streams.Observable;
+import com.bakiproject.streams.StatefulObservable;
+import com.bakiproject.streams.StatefulSubject;
+import com.bakiproject.streams.StreamThread;
+import com.bakiproject.streams.Subject;
 
 import java.net.*;
 import java.io.*;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.IntConsumer;
-import java.util.function.LongConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CommunicationServer {
     private ServerSocket server;
 
-    Set<ServerConnection> connections = new HashSet<>();
+    HashSet<ServerConnection> connections = new HashSet<>();
 
     private boolean isOpen = true;
 
     private final String username;
-    private final Consumer<Set<UserInfo>> onClientConnected;
-    private LongConsumer startMusicAtTime;
 
-    private final ManyToOneBarrier barrier = new ManyToOneBarrier();
+    /**
+     * Ortak thread'de broadcastleri yapmamızı sağlayan bir stream yarattım. Bu sayede her şey tek
+     * thread'den çalışıyor, concurrency ile uğraşmıyoruz.
+     */
+    Subject<Function<ServerConnection, Message>> broadcastRequestsStream = new Subject<>();
 
-    public CommunicationServer(String roomName, String username, Consumer<Set<UserInfo>> onClientConnected, LongConsumer startMusicAtTime) {
+    /**
+     * User listemiz değiştiğinde streame yeni liste akıyor. Buraya yapılan tüm accept'ler
+     * messages thread'den geliyor
+     */
+    private final StatefulSubject<Set<UserInfo>> userInfoUpdatesStream
+            = new StatefulSubject<>(Collections.emptySet());
+
+    /**
+     * Ana sınıfa müziği başlat eventi yollamak istediğimizde buraya event atıyoruz.
+     */
+    private final Subject<Long> startMusicEventsStream = new Subject<>();
+
+    /**
+     * Bu stream her bizim connectionlarımızdan biri düştüğünde veya clientlardan biri timingupdate
+     * mesajı yolladığında yeni listeyi receive ediyor. Messages thread'de çalışıyor
+     */
+    private final Subject<Set<ServerConnection>> timingUpdatesStream = new Subject<>();
+
+
+    public CommunicationServer(String roomName, String username) {
         this.username = username;
-        this.onClientConnected = onClientConnected;
-        this.startMusicAtTime = startMusicAtTime;
-        // starts server and waits for a connection
+
+        Subject<Pair<ServerConnection, Message>> allMessagesStream = new Subject<>();
+        StreamThread messagesThread = new StreamThread();
+
         try {
             server = new ServerSocket(8000);
         } catch (IOException i) {
-            System.err.println(i);
+            i.printStackTrace();
         }
-        new Thread(() -> {
+
+        broadcastRequestsStream
+                .subscribeOnThread(messagesThread)
+                .subscribe(msg -> connections.forEach(c -> c.sendMessage(msg.apply(c))));
+
+        /*
+         * Ortak thread'de mesajları işleyen bir mesaj işleme streami yarattım. Bu sayede her şey tek
+         * thread'den çalışıyor, concurrency ile uğraşmıyoruz.
+         */
+
+        allMessagesStream
+                .subscribeOnThread(messagesThread)
+                .filter(pair -> pair.second instanceof Message.UserIntroMessage)
+                .subscribe(pair -> {
+                    pair.first.userInfo = new UserInfo(
+                            ((Message.UserIntroMessage) pair.second).info(),
+                            pair.first.address.getHostAddress());
+
+                    connections.add(pair.first);
+
+                    Set<UserInfo> currUsers = getUsers();
+                    userInfoUpdatesStream.accept(currUsers);
+                    broadcastRequestsStream.accept(c -> new Message.UsersListUpdateMessage(currUsers));
+                });
+
+        allMessagesStream
+                .subscribeOnThread(messagesThread)
+                .filter(pair -> pair.second instanceof Message.DisconnectMessage)
+                .subscribe(pair -> {
+                    System.out.println("Removed " + pair.first.userInfo);
+
+                    connections.remove(pair.first);
+                    Set<UserInfo> currUsers = getUsers();
+                    userInfoUpdatesStream.accept(currUsers);
+                    broadcastRequestsStream.accept(c -> new Message.UsersListUpdateMessage(currUsers));
+
+                    timingUpdatesStream.accept(connections
+                            .stream()
+                            .filter(conn -> conn.timeDifference != Long.MAX_VALUE)
+                            .collect(Collectors.toSet()));
+                });
+
+        allMessagesStream
+                .subscribeOnThread(messagesThread)
+                .filter(pair -> pair.second instanceof Message.GetTimeResponse)
+                .subscribe(pair -> {
+                    Message.GetTimeResponse msg = (Message.GetTimeResponse) pair.second;
+                    long ctm = System.currentTimeMillis();
+                    pair.first.timeDifference = (ctm + msg.millisTimeRequestSent()) / 2 - msg.millisTimeResponseSent();
+
+                    timingUpdatesStream.accept(connections
+                            .stream()
+                            .filter(conn -> conn.timeDifference != Long.MAX_VALUE)
+                            .collect(Collectors.toSet()));
+                });
+
+
+        //Server listener thread sadece yeni bağlantıları receive ediyor ve her bağlantı için connection objesini yaratıyor
+        Thread serverListenerThread = new Thread(() -> {
             while (isOpen) {
                 try {
                     Socket socket = server.accept();
                     ServerConnection connection = new ServerConnection(socket);
-                    new Thread(connection).start();
+                    connection
+                            .getMessageStream()
+                            .map(m -> new Pair<>(connection, m))
+                            .subscribe(allMessagesStream);
+
+                    connection.start();
                 } catch (IOException e) {
                     close();
-                    System.err.println(e);
+                    e.printStackTrace();
                 }
             }
-        }).start();
+        });
+        serverListenerThread.start();
+    }
+
+    private Set<UserInfo> getUsers() {
+        Set<UserInfo> currUsers = new HashSet<>();
+        currUsers.add(new UserInfo(username, null, null));
+        connections.forEach(sc -> currUsers.add(sc.userInfo));
+        return currUsers;
     }
 
     public void close() {
@@ -55,96 +153,50 @@ public class CommunicationServer {
         try {
             server.close();
             connections.forEach(Connection::close);
+
+            userInfoUpdatesStream.accept(Collections.emptySet());
         } catch (IOException e) {
-            System.err.println(e);
+            e.printStackTrace();
         }
     }
 
-    public void asyncDoStartMusicSequence() {
-        new Thread(() -> {
-            try {
-                barrier.setValue(connections.size());
-                for (ServerConnection connection : connections) {
-                    connection.sendRefreshTimingsMessage();
-                }
-                barrier.waitForOthers();
-                long musicTime = System.currentTimeMillis() + 1000;
-                for (ServerConnection connection : connections) {
-                    connection.sendStartMusicAtMessage(musicTime);
-                }
-                startMusicAtTime.accept(musicTime);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
+    public void doStartMusicSequence() {
 
+        broadcastRequestsStream.accept(connection ->
+        {
+            connection.timeDifference = Long.MAX_VALUE;
+            return new Message.GetTimeMessage();
         });
+
+
+        timingUpdatesStream
+                .filter(c -> c.size() == connections.size())
+                .once()
+                .subscribe(connections -> {
+                    long musicTime = System.currentTimeMillis() + 1000;
+
+                    broadcastRequestsStream.accept(connection ->
+                            new Message.StartMusicAtTimeMessage(musicTime - connection.timeDifference));
+
+                    startMusicEventsStream.accept(musicTime);
+                });
     }
 
-    private class ServerConnection extends Connection {
+    public StatefulObservable<Set<UserInfo>> getUserInfoUpdatesStream() {
+        return userInfoUpdatesStream;
+    }
+
+    public Observable<Long> getStartMusicEventsStream() {
+        return startMusicEventsStream;
+    }
+
+    private static class ServerConnection extends Connection {
 
         UserInfo userInfo = null;
-        long timeDifference;
+        long timeDifference = Long.MAX_VALUE;
 
         public ServerConnection(Socket socket) throws IOException {
             super(socket, true);
-        }
-
-        @Override
-        void messageReceived(Message rawMsg) {
-            if (rawMsg instanceof Message.GetTimeResponse) {
-                Message.GetTimeResponse msg = (Message.GetTimeResponse) rawMsg;
-                long ctm = System.currentTimeMillis();
-                timeDifference = (ctm + msg.millisTimeRequestSent()) / 2 - msg.millisTimeResponseSent();
-
-                barrier.notifyFinished();
-            } else if (rawMsg instanceof Message.UserIntroMessage) {
-                userInfo = new UserInfo(((Message.UserIntroMessage) rawMsg).info(), address.getHostAddress());
-                connections.add(this);
-
-                sendUserListMessage();
-
-                onClientConnected.accept(connections
-                        .stream()
-                        .map(ServerConnection::getUserInfo)
-                        .collect(Collectors.toSet()));
-            }
-        }
-
-        void sendRefreshTimingsMessage() throws IOException {
-            timeDifference = Long.MAX_VALUE;
-            sendMessage(new Message.GetTimeMessage());
-        }
-
-        private void sendUserListMessage() {
-            Message.UsersListUpdateMessage usersMsg = new Message.UsersListUpdateMessage(
-                    Stream.concat(
-                                    Stream.of(new UserInfo(username, null, null)),
-                                    connections.stream().map(ServerConnection::getUserInfo))
-                            .collect(Collectors.toSet()));
-
-            for (ServerConnection connection : connections) {
-                try {
-                    connection.sendMessage(usersMsg);
-                } catch (IOException e) {
-                    System.out.println(e);
-                }
-            }
-        }
-
-        @Override
-        void onStopped() {
-            connections.remove(this);
-            sendUserListMessage();
-            if (timeDifference == Long.MAX_VALUE)
-                barrier.notifyFinished();
-        }
-
-        UserInfo getUserInfo() {
-            return userInfo;
-        }
-
-        public void sendStartMusicAtMessage(long musicTime) throws IOException {
-            sendMessage(new Message.StartMusicAtTimeMessage(musicTime - timeDifference));
         }
     }
 }

@@ -195,4 +195,10 @@ public interface Message extends Serializable {
         }
 
     }
+
+    final class PingMessage implements Message {
+    }
+
+    final class DisconnectMessage implements Message {
+    }
 }

@@ -3,6 +3,7 @@ package com.bakiproject;
 import android.media.MediaPlayer;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import static org.mockito.Mockito.*;
 
@@ -12,7 +13,7 @@ import java.io.IOException;
 class ConnectionModelTest {
 
     @Test
-    synchronized void startServer() throws IOException, InterruptedException {
+    synchronized void startServer() throws InterruptedException {
         MediaPlayer mp = mock(MediaPlayer.class);
         MediaPlayer mp2 = mock(MediaPlayer.class);
 
@@ -21,9 +22,12 @@ class ConnectionModelTest {
         model.startServer("asd", "fg");
 
         ConnectionModel cl1 = new ConnectionModel(null, mp2);
+        Thread.sleep(5000);
         cl1.connectToServer("127.0.0.1", "fgfhsa");
+        Thread.sleep(5000);
+        cl1.disconnectFromServer();
+        Thread.sleep(5000);
 
-        wait();
 /*
         model.startMusic();
 
@@ -40,7 +44,7 @@ class ConnectionModelTest {
 
 
     @Test
-    synchronized void listServers() throws IOException, InterruptedException {
+    synchronized void listServers() throws InterruptedException {
         MediaPlayer mp = mock(MediaPlayer.class);
         MediaPlayer mp2 = mock(MediaPlayer.class);
 
@@ -50,6 +54,13 @@ class ConnectionModelTest {
 
         System.out.println(model.broadcastClient.getAvailableServers());
 
+        /*model.connectToServer(
+                model.broadcastClient
+                        .getAvailableServers()
+                        .iterator()
+                        .next()
+                        .addr(),
+                "asd");
 
 /*        model.startServer("asd", "fg");
 

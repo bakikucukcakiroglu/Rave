@@ -1,16 +1,22 @@
 package com.bakiproject.communication;
 
+import com.bakiproject.streams.Observable;
+import com.bakiproject.streams.SingleSubject;
+import com.bakiproject.streams.Subject;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
-public abstract class Connection implements Runnable {
+public class Connection extends Thread {
     private final ObjectInputStream in;
     private final ObjectOutputStream out;
     public final InetAddress address;
     private volatile boolean isRunning = true;
+
+    private final Subject<Message> receivedMessagesStream = new Subject<>();
 
     public Connection(Socket socket, boolean isServer) throws IOException {
         if (isServer) {
@@ -25,11 +31,15 @@ public abstract class Connection implements Runnable {
 
     public void close() {
         isRunning = false;
-        onStopped();
+        receivedMessagesStream.accept(new Message.DisconnectMessage());
     }
 
-    public void sendMessage(Message message) throws IOException {
-        out.writeObject(message);
+    public void sendMessage(Message message) {
+        try {
+            out.writeObject(message);
+        } catch (IOException e) {
+            close();
+        }
     }
 
     @Override
@@ -37,15 +47,18 @@ public abstract class Connection implements Runnable {
         while (isRunning) {
             try {
                 Message msg = (Message) in.readObject();
-                messageReceived(msg);
-                System.out.println("new message of type "+ msg.getClass().getSimpleName());
+                receivedMessagesStream.accept(msg);
+                System.out.println("new message of type " + msg.getClass().getSimpleName());
             } catch (IOException | ClassNotFoundException e) {
+                System.out.print("Connection closed because of ");
+                e.printStackTrace();
                 close();
             }
         }
     }
 
-    abstract void messageReceived(Message message);
+    public Observable<Message> getMessageStream() {
+        return receivedMessagesStream.filter(m -> !(m instanceof Message.PingMessage));
+    }
 
-    abstract void onStopped();
 }

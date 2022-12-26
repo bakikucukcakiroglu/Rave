@@ -15,7 +15,8 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.Set;
 
-import com.bakiproject.react.ReactObservable;
+import com.bakiproject.streams.StatefulSubject;
+import com.bakiproject.streams.Subject;
 import com.bakiproject.react.WritableWrapper;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -37,11 +38,9 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     final MediaPlayer mp;
 
-    ReactObservable<Set<Server>> serverListObservable = new ReactObservable<>(WritableWrapper::wrap,
-            Collections.emptySet());
-    ReactObservable<State> stateObservable = new ReactObservable<>(WritableWrapper::wrap, State.READY);
-    ReactObservable<Set<UserInfo>> userListObservable = new ReactObservable<>(WritableWrapper::wrap,
-            Collections.emptySet());
+    StatefulSubject<Set<Server>> serverListObservable = new StatefulSubject<>(Collections.emptySet());
+    StatefulSubject<State> stateObservable = new StatefulSubject<>(State.READY);
+    StatefulSubject<Set<UserInfo>> userListObservable = new StatefulSubject<>(Collections.emptySet());
 
     public ConnectionModel(ReactApplicationContext context, MediaPlayer mp) {
         this.mp = mp;
@@ -96,21 +95,28 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         if (stateObservable.getState() != State.READY) {
             return;
         }
-
+        System.out.println("Starting server");
         try {
             broadcastServer = new BroadcastServer(roomName);
             communicationServer = new CommunicationServer(
                     roomName,
-                    username,
-                    clients -> {
-                        broadcastServer.setCurrentMembers(clients.size());
-                        userListObservable.accept(clients);
-                    },
-                    this::startMusicAtTime
-                    );
+                    username);
+
+            communicationServer
+                    .getStartMusicEventsStream()
+                    .subscribe(this::startMusicAtTime);
+
+            communicationServer
+                    .getUserInfoUpdatesStream()
+                    .subscribe(userListObservable);
+
+            userListObservable
+                    .map(Set::size)
+                    .subscribe(broadcastServer::setCurrentMembers);
+
             stateObservable.accept(State.SERVING);
         } catch (IOException e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -118,6 +124,8 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         if (stateObservable.getState() != State.SERVING) {
             return;
         }
+
+        System.out.println("Stopping server");
 
         broadcastServer.close();
         communicationServer.close();
@@ -130,17 +138,31 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
             return;
         }
 
+        System.out.println("Connecting to server");
+
         try {
             communicationClient = new CommunicationClient(
                     InetAddress.getByName(addr),
                     8000,
-                    username,
-                    userListObservable,
-                    () -> stateObservable.accept(State.READY),
-                    this::startMusicAtTime);
+                    username);
+
+
+            communicationServer
+                    .getStartMusicEventsStream()
+                    .subscribe(this::startMusicAtTime);
+
+            communicationClient
+                    .getConnectionLostEventStream()
+                    .map(a -> State.READY)
+                    .subscribe(stateObservable);
+
+            communicationClient
+                    .getUserInfoUpdatesStream()
+                    .subscribe(userListObservable);
+
             stateObservable.accept(State.CONNECTED);
         } catch (IOException e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -150,18 +172,20 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
             return;
         }
 
+        System.out.println("Disconnecting from server");
+
         communicationClient.close();
         communicationClient = null;
         stateObservable.accept(State.READY);
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public void startMusic(){
+    public void startMusic() {
         if (stateObservable.getState() != State.SERVING) {
             return;
         }
 
-        communicationServer.asyncDoStartMusicSequence();
+        communicationServer.doStartMusicSequence();
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
