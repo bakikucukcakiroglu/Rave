@@ -2,13 +2,15 @@ package com.bakiproject;
 
 import android.media.MediaPlayer;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import static org.mockito.Mockito.*;
 
-
-import java.io.IOException;
+import com.bakiproject.react.WritableWrapper;
 
 class ConnectionModelTest {
 
@@ -23,10 +25,13 @@ class ConnectionModelTest {
 
         ConnectionModel cl1 = new ConnectionModel(null, mp2);
         Thread.sleep(5000);
+
         cl1.connectToServer("127.0.0.1", "fgfhsa");
         Thread.sleep(5000);
+
         cl1.disconnectFromServer();
         Thread.sleep(5000);
+
 
 /*
         model.startMusic();
@@ -52,7 +57,7 @@ class ConnectionModelTest {
 
         Thread.sleep(3000);
 
-        System.out.println(model.broadcastClient.getAvailableServers());
+        System.out.println(model.broadcastClient.getServerListUpdatesStream().getState());
 
         /*model.connectToServer(
                 model.broadcastClient

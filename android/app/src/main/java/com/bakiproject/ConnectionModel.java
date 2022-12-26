@@ -15,6 +15,7 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.Set;
 
+import com.bakiproject.streams.StatefulObservable;
 import com.bakiproject.streams.StatefulSubject;
 import com.bakiproject.streams.Subject;
 import com.bakiproject.react.WritableWrapper;
@@ -38,38 +39,20 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     final MediaPlayer mp;
 
-    StatefulSubject<Set<Server>> serverListObservable = new StatefulSubject<>(Collections.emptySet());
+    StatefulObservable<Set<Server>> serverListObservable;
     StatefulSubject<State> stateObservable = new StatefulSubject<>(State.READY);
     StatefulSubject<Set<UserInfo>> userListObservable = new StatefulSubject<>(Collections.emptySet());
 
     public ConnectionModel(ReactApplicationContext context, MediaPlayer mp) {
         this.mp = mp;
+        mp.start();
         try {
-            broadcastClient = new BroadcastClient(serverListObservable);
+            broadcastClient = new BroadcastClient();
+            serverListObservable = broadcastClient.getServerListUpdatesStream();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
-    /*
-     * @Override
-     * public void initialize() {
-     * super.initialize();
-     *
-     * serverListObservable.subscribe(list -> this
-     * .getReactApplicationContext()
-     * .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-     * .emit("serverListChange", list));
-     * stateObservable.subscribe(state -> this
-     * .getReactApplicationContext()
-     * .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-     * .emit("stateChange", state));
-     * userListObservable.subscribe(list -> this
-     * .getReactApplicationContext()
-     * .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-     * .emit("userListChange", list));
-     * }
-     */
 
     @NonNull
     @Override
