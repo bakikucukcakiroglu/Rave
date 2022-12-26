@@ -1,8 +1,5 @@
 package com.bakiproject.communication;
 
-import android.util.Pair;
-
-import com.bakiproject.ManyToOneBarrier;
 import com.bakiproject.UserInfo;
 import com.bakiproject.streams.Observable;
 import com.bakiproject.streams.StatefulObservable;
@@ -37,8 +34,7 @@ public class CommunicationServer {
      * User listemiz değiştiğinde streame yeni liste akıyor. Buraya yapılan tüm accept'ler
      * messages thread'den geliyor
      */
-    private final StatefulSubject<Set<UserInfo>> userInfoUpdatesStream
-            = new StatefulSubject<>(Collections.emptySet());
+    private final StatefulSubject<Set<UserInfo>> userInfoUpdatesStream;
 
     /**
      * Ana sınıfa müziği başlat eventi yollamak istediğimizde buraya event atıyoruz.
@@ -55,7 +51,10 @@ public class CommunicationServer {
     public CommunicationServer(String roomName, String username) {
         this.username = username;
 
-        Subject<Pair<ServerConnection, Message>> allMessagesStream = new Subject<>();
+        userInfoUpdatesStream = new StatefulSubject<>(
+                Collections.singleton(new UserInfo(username)));
+
+        Subject<MessagePair> allMessagesStream = new Subject<>();
         StreamThread messagesThread = new StreamThread();
 
         try {
@@ -77,6 +76,7 @@ public class CommunicationServer {
                 .subscribeOnThread(messagesThread)
                 .filter(pair -> pair.second instanceof Message.UserIntroMessage)
                 .subscribe(pair -> {
+                    System.out.println("Received UserIntroMessage");
                     pair.first.userInfo = new UserInfo(
                             ((Message.UserIntroMessage) pair.second).info(),
                             pair.first.address.getHostAddress());
@@ -92,7 +92,7 @@ public class CommunicationServer {
                 .subscribeOnThread(messagesThread)
                 .filter(pair -> pair.second instanceof Message.DisconnectMessage)
                 .subscribe(pair -> {
-                    System.out.println("Removed " + pair.first.userInfo);
+                    System.out.println("Removed " + pair.first);
 
                     connections.remove(pair.first);
                     Set<UserInfo> currUsers = getUsers();
@@ -109,6 +109,7 @@ public class CommunicationServer {
                 .subscribeOnThread(messagesThread)
                 .filter(pair -> pair.second instanceof Message.GetTimeResponse)
                 .subscribe(pair -> {
+                    System.out.println("Received GetTimeResponse");
                     Message.GetTimeResponse msg = (Message.GetTimeResponse) pair.second;
                     long ctm = System.currentTimeMillis();
                     pair.first.timeDifference = (ctm + msg.millisTimeRequestSent()) / 2 - msg.millisTimeResponseSent();
@@ -128,7 +129,7 @@ public class CommunicationServer {
                     ServerConnection connection = new ServerConnection(socket);
                     connection
                             .getMessageStream()
-                            .map(m -> new Pair<>(connection, m))
+                            .map(m -> new MessagePair(connection, m))
                             .subscribe(allMessagesStream);
 
                     connection.start();
@@ -143,7 +144,7 @@ public class CommunicationServer {
 
     private Set<UserInfo> getUsers() {
         Set<UserInfo> currUsers = new HashSet<>();
-        currUsers.add(new UserInfo(username, null, null));
+        currUsers.add(new UserInfo(username));
         connections.forEach(sc -> currUsers.add(sc.userInfo));
         return currUsers;
     }
@@ -197,6 +198,16 @@ public class CommunicationServer {
 
         public ServerConnection(Socket socket) throws IOException {
             super(socket, true);
+        }
+    }
+
+    static class MessagePair {
+        public final ServerConnection first;
+        public final Message second;
+
+        MessagePair(ServerConnection first, Message second) {
+            this.first = first;
+            this.second = second;
         }
     }
 }

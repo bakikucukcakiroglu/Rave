@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
@@ -79,6 +81,7 @@ public class CommunicationClient {
 
         connection.start();
         connection.sendMessage(new Message.UserIntroMessage(username, null));
+
     }
 
     public void close() {
