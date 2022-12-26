@@ -1,31 +1,38 @@
 package com.bakiproject.communication;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import com.bakiproject.UserInfo;
-import com.bakiproject.streams.Observable;
 import com.bakiproject.streams.StatefulObservable;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.verification.VerificationMode;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Set;
+import java.util.function.Consumer;
 
 class CommunicationTest {
 
-    CommunicationServer server = new CommunicationServer("test", "admin");
+    CommunicationServer server;
 
-    StatefulObservable<Set<UserInfo>> serverUserInfoUpdates = server.getUserInfoUpdatesStream();
+    StatefulObservable<Set<UserInfo>> serverUserInfoUpdates;
 
     @BeforeEach
     void setUp() {
+        server = new CommunicationServer("test", "admin");
+        serverUserInfoUpdates = server.getUserInfoUpdatesStream();
     }
 
     @Test
-    void simpleConnectionTest() throws IOException, InterruptedException {
+    void connectDisconnectTest() throws IOException, InterruptedException {
         assertEquals(1, serverUserInfoUpdates.getState().size());
+
+        Thread.sleep(500);
         CommunicationClient c1 = new CommunicationClient(InetAddress.getByName("localhost"), 8000, "c1");
 
         Thread.sleep(1000);
@@ -40,14 +47,36 @@ class CommunicationTest {
         assertEquals(3, c2.getUserInfoUpdatesStream().getState().size());
 
         c2.close();
-        Thread.sleep(4000);
+        Thread.sleep(10000);
         assertEquals(2, serverUserInfoUpdates.getState().size());
         assertEquals(2, c1.getUserInfoUpdatesStream().getState().size());
 
     }
 
     @Test
-    void doStartMusicSequence() {
+    void doStartMusicSequence() throws InterruptedException, IOException {
+        Thread.sleep(1000);
+        CommunicationClient c1 = new CommunicationClient(InetAddress.getByName("localhost"), 8000, "c1");
 
+        Thread.sleep(1000);
+        CommunicationClient c2 = new CommunicationClient(InetAddress.getByName("localhost"), 8000, "c2");
+
+        Thread.sleep(1000);
+        Consumer<Long> cS = mock(Consumer.class);
+        Consumer<Long> cc1 = mock(Consumer.class);
+        Consumer<Long> cc2 = mock(Consumer.class);
+
+
+        server.getStartMusicEventsStream().subscribe(cS);
+        c1.getStartMusicEventsStream().subscribe(cc1);
+        c2.getStartMusicEventsStream().subscribe(cc2);
+
+        server.doStartMusicSequence();
+
+        Thread.sleep(5000);
+
+        verify(cS).accept(any());
+        verify(cc1).accept(any());
+        verify(cc2).accept(any());
     }
 }

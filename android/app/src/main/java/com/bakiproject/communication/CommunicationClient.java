@@ -80,8 +80,12 @@ public class CommunicationClient {
                 .subscribe(a -> connectionLostEventStream.accept(null));
 
         connection.start();
-        connection.sendMessage(new Message.UserIntroMessage(username, null));
-
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                connection.sendMessage(new Message.UserIntroMessage(username, null));
+            }
+        }, 500);
     }
 
     public void close() {

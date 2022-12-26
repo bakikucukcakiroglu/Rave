@@ -46,12 +46,12 @@ public class Connection extends Thread {
             @Override
             public void run() {
                 sendMessage(new Message.PingMessage());
-                if (System.currentTimeMillis() - lastReceivedPing.get() > 1500) {
+                if (System.currentTimeMillis() - lastReceivedPing.get() > 4000) {
                     System.out.println("Killing");
                     close();
                 }
             }
-        }, 0, 500);
+        }, 0, 2000);
     }
 
     public void close() {
@@ -82,9 +82,7 @@ public class Connection extends Thread {
                 receivedMessagesStream.accept(msg);
                 System.out.println("Received message of type " + msg.getClass().getSimpleName());
             } catch (IOException | ClassNotFoundException e) {
-                System.out.print("Connection closed");
                 e.printStackTrace();
-                close();
             }
         }
     }

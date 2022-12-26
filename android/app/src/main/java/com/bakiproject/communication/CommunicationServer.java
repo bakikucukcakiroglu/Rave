@@ -163,12 +163,11 @@ public class CommunicationServer {
 
     public void doStartMusicSequence() {
 
-        broadcastRequestsStream.accept(connection ->
-        {
-            connection.timeDifference = Long.MAX_VALUE;
-            return new Message.GetTimeMessage();
+        timingUpdatesStream.subscribe(x -> {
+            System.out.println("Timings Update");
+            System.out.println(x);
+            System.out.println(connections);
         });
-
 
         timingUpdatesStream
                 .filter(c -> c.size() == connections.size())
@@ -181,6 +180,12 @@ public class CommunicationServer {
 
                     startMusicEventsStream.accept(musicTime);
                 });
+
+        broadcastRequestsStream.accept(connection ->
+        {
+            connection.timeDifference = Long.MAX_VALUE;
+            return new Message.GetTimeMessage();
+        });
     }
 
     public StatefulObservable<Set<UserInfo>> getUserInfoUpdatesStream() {
