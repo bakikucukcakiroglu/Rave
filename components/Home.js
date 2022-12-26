@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   NativeEventEmitter,
   TextInput,
+  FlatList
 } from 'react-native';
 
 import {useState, useEffect} from 'react';
@@ -42,12 +43,13 @@ const Home = ({navigation, route}) => {
     }
   }, [route.params?.loading]);
 
-  const joinRoomOnPressHandler = room => {
+  const joinRoomOnPressHandler =()=> {
     navigation.setParams({
       loading: true,
     });
+    ConnectionModel.connectToServer(openModalIp, 'test');
     setOpenModalIp('');
-    ConnectionModel.connectToServer(room.address, 'test');
+
   };
 
   const createRoomOnPressHandler = () => {
@@ -66,104 +68,93 @@ const Home = ({navigation, route}) => {
       <ActivityIndicator color={'#2196F3'} size={'large'} />
     </View>
   ) : (
-    <View>
-      <Pressable
-        style={({pressed}) => ({
-          opacity: pressed ? 0.5 : 1,
-          padding: 10,
-          backgroundColor: '#2196F3',
-        })}
-        onPress={createRoomOnPressHandler}>
-        <Text style={styles.textStyle}>Create Room</Text>
-      </Pressable>
-      <ScrollView>
-        <View style={styles.container}>
-          {rooms.map(room => {
-            return (
-              <Card key={room.address} style={styles.card}>
-                <Card.Content style={styles.cardContent}>
-                  <View style={{flex: 5}}>
-                    <Title style={{marginTop: -5}}>{room.name} </Title>
-                    <Text>Room IP: {room.address}</Text>
-
-                    <Text>Current Member: {room.currentMembers}</Text>
-
-                    {openModalIp == room.address && (
-                      <View style={styles.centeredView}>
-                        <Modal
-                          animationType="slide"
-                          transparent={true}
-                          visible={true}
-                          onRequestClose={() => {
-                            //alert('Modal has been closed.');
-                            setOpenModalIp('');
-                          }}>
-                          <View style={styles.centeredView}>
-                            <View style={styles.modalView}>
-                              <Text style={styles.modalText}>
-                                {'Type your user name for the room.'}
-                              </Text>
-                              <TextInput
-                                style={{
-                                  borderWidth: 1,
-                                  borderColor: 'black',
-                                  width: '100%',
-
-                                  borderRadius: 100,
-                                  padding: 3,
-                                  paddingLeft: 10,
-
-                                  marginBottom: 15,
-                                }}
-                                placeholder="User Name"
-                                placeholderTextColor="#000"
-                                value={userName}
-                                onChangeText={setUserName}></TextInput>
-                              <View
-                                style={{
-                                  width: '100%',
-                                  flexDirection: 'row',
-                                  justifyContent: 'flex-end',
-                                  alignItems: 'center',
-                                }}>
-                                <Pressable
-                                  style={[styles.button, styles.buttonClose]}
-                                  onPress={() => setOpenModalIp('')}>
-                                  <Text style={styles.textStyle}>Cancel</Text>
-                                </Pressable>
-
-                                <Pressable
-                                  style={[styles.button, styles.buttonClose]}
-                                  onPress={() => {
-                                    joinRoomOnPressHandler(room);
-                                  }}>
-                                  <Text style={styles.textStyle}>Join!</Text>
-                                </Pressable>
-                              </View>
-                            </View>
-                          </View>
-                        </Modal>
-                      </View>
-                    )}
-                  </View>
-                  <View
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}>
-                    <Pressable onPress={() => setOpenModalIp(room.address)}>
-                      <Icon name="md-enter" size={30} color="#2196F3" />
-                    </Pressable>
-                  </View>
-                </Card.Content>
-              </Card>
-            );
+    <View style={styles.container}>
+      <View>
+        <Pressable
+          style={({pressed}) => ({
+            opacity: pressed ? 0.5 : 1,
+            padding: 10,
+            backgroundColor: '#2196F3',
           })}
+          onPress={createRoomOnPressHandler}>
+          <Text style={styles.textStyle}>Create Room</Text>
+        </Pressable>
+      </View>
+      <FlatList
+        data={rooms}
+        style={styles.flatList}
+        keyExtractor={(item) => item.address ? item.address : 0}
+        renderItem={({ item }) => (
+          <View style={styles.cardContainer}>
+            
+            
+
+            <View style={{flex:1,display:"flex", flexDirection:"column", justifyContent:"center"}}>
+              <Text style={styles.cardTextRoomName}><Icon name="ios-people-circle" size={30} color="black" />{" "} {item.name}</Text>
+              <Text style={styles.cardText}>{" IP: "}{item.address}</Text>
+            </View>
+            <Pressable onPress={() => setOpenModalIp(item.address)}>
+              <Icon name="md-enter" size={35} color="#2196F3" />
+            </Pressable>
+        
+          </View>
+        )}
+      />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={openModalIp!=''}
+        onRequestClose={() => {
+          setOpenModalIp('');
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>
+              {'Type your user name for the room.'}
+            </Text>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: 'black',
+                width: '100%',
+
+                borderRadius: 100,
+                padding: 3,
+                paddingLeft: 10,
+
+                marginBottom: 15,
+              }}
+              placeholder="User Name"
+              placeholderTextColor="#000"
+              value={userName}
+              onChangeText={setUserName}></TextInput>
+            <View
+              style={{
+                width: '100%',
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+              }}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => setOpenModalIp('')}>
+                <Text style={styles.textStyle}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                disabled= {!userName.length}
+                style={userName.length ? { backgroundColor: '#2196F3', ...styles.button}: { backgroundColor: 'darkgray',  ...styles.button}}
+                onPress={
+                  joinRoomOnPressHandler
+                }>
+                <Text style={styles.textStyle}>Join!</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
-      </ScrollView>
+      </Modal>
     </View>
+    
   );
 };
 
@@ -179,18 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     overflow: 'hidden',
   },
-  cardContent: {
-    display: 'flex',
-    flexDirection: 'row',
-    backgroundColor: 'white',
-  },
 
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 30,
-  },
   textStyle: {
     color: 'white',
     fontWeight: 'bold',
@@ -234,9 +214,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     textAlign: 'center',
   },
-  buttonOpen: {
-    backgroundColor: '#F194FF',
-  },
+
   buttonClose: {
     backgroundColor: '#2196F3',
   },
@@ -244,6 +222,31 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  flatList: {
+    flex: 1
+  },
+  cardContainer: {
+    padding: 16,
+    margin: 8,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderColor: "green",
+    display:"flex",
+    flexDirection:"row",
+    alignItems:"center",
+    justifyContent:"space-between"
+
+  },
+  container: {
+    flex: 1,
+    borderColor: "blue",
+
+  },
+   cardTextRoomName: {
+    fontSize: 20,
+    textAlignVertical:"center"
+
   },
 });
 export default Home;

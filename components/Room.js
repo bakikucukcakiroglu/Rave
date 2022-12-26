@@ -44,24 +44,16 @@ const mockUserData = [
 ];
 
 const Room = () => {
-  const [isPlaying, setIsPlaying] = useState(true);
   const [users, setUsers] = useState([]);
+  const [musicState, setMusicState] = useState("STOPPED");
+  const [isWaiting, setIsWaiting]  = useState(false);
 
-  const handlePlayPress = () => {
-    setIsPlaying(true);
-    ConnectionModel.startMusic();
-
-  };
-
-  const handleStopPress = () => {
-    setIsPlaying(false);
-    ConnectionModel.stopMusic();
-
-  };
 
 
   useEffect(() => {
     const interval = setInterval(() => {
+
+      
       setUsers(ConnectionModel.getUserList());
     }, 1000);
 
@@ -69,57 +61,78 @@ const Room = () => {
       clearInterval(interval);
     };
   }, []);
-  
 
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+
+      let state = ConnectionModel.getMusicState();
+
+      if(state != "WAIT"){
+
+        setMusicState(ConnectionModel.getMusicState());
+        setIsWaiting(false);
+      }else{
+
+        setIsWaiting(true);
+      }
+    }, 150);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
-      {!isPlaying ? (<View style={styles.buttonContainer}>
+      {musicState != "PLAYING" ? (<View style={styles.buttonContainer}>
         <Pressable
+          disabled={isWaiting}
           style={{
             width: "100%",
             height: "100%",
-            backgroundColor: "#2196F3",
+            backgroundColor: !isWaiting  ? "#2196F3": "darkgray",
             display: "flex",
             justifyContent: "center",
             alignItems: "center"
           }}
-          onPress={handlePlayPress}
+          onPress={() =>  ConnectionModel.startMusic()}
         >
           <Icon name="play" size={50} color="white" />
         </Pressable>
       </View>)
        :(<View style={styles.buttonContainer}>
          <Pressable
+          disabled={isWaiting}
           style={{
             flex:1,
             height: "100%",
-            backgroundColor: "gray",
+            backgroundColor: !isWaiting ? "gray" : "darkgray",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             borderRightWidth :1,
             borderColor:"white",
           }}
-          onPress={handleStopPress}
+          onPress={() => ConnectionModel.stopMusic()}
         >
           <Icon name="stop" size={50} color="white" />
         </Pressable>
-        <View></View>
+       
           <Pressable
-          style={{
-            flex:1,
-            height: "100%",
-            backgroundColor: "gray",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-     
+            disabled={isWaiting}
+            style={{
+              flex:1,
+              height: "100%",
+              backgroundColor:!isWaiting ? "gray" : "darkgray",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+      
          
             //borderStyle:"solid"
           }}
-          onPress={handleStopPress}
+          onPress={() =>  ConnectionModel.pauseMusic()}
         >
           <Icon name="pause" size={50} color="white" />
         </Pressable>
