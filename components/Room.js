@@ -1,203 +1,113 @@
-import {
-  Text,
-  Pressable,
-  View,
-  ScrollView,
-  StyleSheet,
-  NativeModules,
-  VirtualizedList,
-} from 'react-native';
-import {Card, Title} from 'react-native-paper';
-
-import Icon from 'react-native-vector-icons/Ionicons';
-
-import {useState, useEffect} from 'react';
-
+import React, { useState , useEffect} from "react";
+import { View, Text, StyleSheet, Button, FlatList ,  NativeModules,} from "react-native";
 const {ConnectionModel} = NativeModules;
 
-const Room = ({navigation, route}) => {
-  const [users, setUsers] = useState([]);
 
-  const leaveRoomOnPressHandler = () => {
-    if (route.params.role == 'slave') {
-      ConnectionModel.disconnectFromServer();
-    } else if (route.params.role == 'master') {
-      ConnectionModel.stopServer();
-    }
+const mockUserData = [
+  {
+    id: "1",
+    name: "John Smith",
+    age: 32
+  },
+  {
+    id: "2",
+    name: "Jane Doe",
+    age: 28
+  },
+  {
+    id: "3",
+    name: "Bob Johnson",
+    age: 45
+  },
+  {
+    id: "2",
+    name: "Jane Doe",
+    age: 28
+  },
+  {
+    id: "3",
+    name: "Bob Johnson",
+    age: 45
+  },
+   {
+    id: "2",
+    name: "Jane Doe",
+    age: 28
+  },
+  {
+    id: "3",
+    name: "Bob Johnson",
+    age: 45
+  }
+];
+
+const Room = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlayPress = () => {
+    setIsPlaying(true);
+    ConnectionModel.startMusic();
+
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      let u = ConnectionModel.getUserList();
+  const handleStopPress = () => {
+    setIsPlaying(false);
+    ConnectionModel.stopMusic();
 
-      if (u.length) {
-        u[0].server = true;
-      }
-      setUsers(u);
-      //alert(JSON.stringify(users))
-    }, 1000);
+  };
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+
 
   return (
-    <View>
-      <Pressable
-        style={({pressed}) => ({
-          opacity: pressed ? 0.5 : 1,
-          padding: 10,
-          backgroundColor: '#2196F3',
-        })}
-        onPress={() => leaveRoomOnPressHandler}>
-        <Text style={styles.textStyle}>Leave Room</Text>
-      </Pressable>
-      <View style={styles.container}>
-        <View
-          style={{flex: 1, borderWidth: 5, borderColor: 'purple', zIndex: 100}}>
-          {users.map((user, index) => {
-            return (
-              user.server && (
-                <View
-                  style={{
-                    height: '100%',
-                    borderWidth: 5,
-                    borderColor: 'purple',
-                    zIndex: 100,
-                  }}>
-                  <Card key={user.address} style={styles.card}>
-                    <Card.Content style={styles.cardContent}>
-                      <Title style={{marginTop: -5}}>
-                        {user.server && 'Host: '}
-                        {user.username}
-                      </Title>
-                      <View style={styles.middleCard}>
-                        <Text>
-                          {user.server ? 'Host IP' : 'User IP'}: {user.address}
-                        </Text>
-                      </View>
-                    </Card.Content>
-                  </Card>
-                </View>
-              )
-            );
-          })}
-          <View>
-            <Text>{'sdfa'}</Text>
-            <Icon name="md-play-outline" size={30} color="#2196F3" />
-          </View>
-        </View>
-        <ScrollView
-          style={{
-            height: '100%',
-            top: '40%',
-            borderWidth: 1,
-            borderColor: 'red',
-          }}>
-          <View>
-            {users.map((user, index) => {
-              return (
-                !user.server && (
-                  <View>
-                    <Card key={index} style={styles.card}>
-                      <Card.Content style={styles.cardContent}>
-                        <Title style={{marginTop: -5}}>
-                          {user.server && 'Host: '}
-                          {user.username}
-                        </Title>
-                        <View style={styles.middleCard}>
-                          <Text>
-                            {user.server ? 'Host IP' : 'User IP'}:{' '}
-                            {user.address}
-                          </Text>
-                        </View>
-                      </Card.Content>
-                    </Card>
-                  </View>
-                )
-              );
-            })}
-          </View>
-        </ScrollView>
+    <View style={styles.container}>
+      <View style={styles.buttonContainer}>
+        <Button title="Play" onPress={handlePlayPress} />
+        <Button title="Stop" onPress={handleStopPress} />
       </View>
+      <FlatList
+        data={mockUserData}
+        style={styles.flatList}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.cardContainer}>
+            <Text style={styles.cardText}>{item.name}</Text>
+            <Text style={styles.cardText}>{item.age}</Text>
+          </View>
+        )}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: 100,
-    width: '95%',
-    shadowColor: 'black',
-    shadowRadius: 10,
-    borderRadius: 30,
-    margin: 10,
-    backgroundColor: 'white',
-  },
-  cardContent: {},
   container: {
-    height: '100%',
-    borderWidth: 15,
-    borderColor: 'purple',
-    zIndex: 100,
-  },
-
-  centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 30,
-  },
-  textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalView: {
-    width: '100%',
-    backgroundColor: 'white',
-    borderRadius: 20,
+    borderColor: "blue",
 
-    padding: 15,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    alignSelf: 'flex-start',
+  buttonContainer: {
+    height: "30%",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    borderColor: "red",
+  
   },
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-  },
-  button: {
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-  },
-  buttonOpen: {
-    backgroundColor: '#F194FF',
-  },
-  buttonClose: {
-    backgroundColor: '#2196F3',
-  },
+  cardContainer: {
+    flex: 1,
+    padding: 16,
+    margin: 8,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderColor: "green",
 
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
   },
+  cardText: {
+    fontSize: 18
+  },
+  flatList: {
+    flex: 1
+  }
 });
 
 export default Room;

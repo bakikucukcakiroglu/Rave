@@ -27,7 +27,7 @@ public class MyAppPackage implements ReactPackage {
             @NonNull ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
 
-        modules.add(new ConnectionModel(reactContext, MediaPlayer.create(reactContext, R.raw.piano)));
+        modules.add(new ConnectionModel(reactContext, MediaPlayer.create(reactContext, R.raw.geceler)));
 
         return modules;
     }

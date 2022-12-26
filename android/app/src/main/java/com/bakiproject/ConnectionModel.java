@@ -78,7 +78,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     }
 
     private void startMusicAtTime(long time) {
-        new Thread(() -> {
+        /*new Thread(() -> {
             while (Clock.systemUTC().millis() < time) {
                 try {
                     Thread.sleep(1);
@@ -86,8 +86,8 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                     e.printStackTrace();
                 }
             }
-            mp.start();
-        });
+        });*/
+        mp.start();
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
@@ -146,7 +146,6 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                     8000,
                     username);
 
-
             communicationServer
                     .getStartMusicEventsStream()
                     .subscribe(this::startMusicAtTime);
@@ -181,11 +180,19 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void startMusic() {
+
         if (stateObservable.getState() != State.SERVING) {
             return;
         }
 
         communicationServer.doStartMusicSequence();
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public void stopMusic() {
+        mp.stop();
+
+
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
