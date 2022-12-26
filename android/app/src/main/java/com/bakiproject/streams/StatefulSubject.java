@@ -12,7 +12,6 @@ import java.util.function.Predicate;
  */
 public class StatefulSubject<T> extends Subject<T> implements StatefulObservable<T> {
     T state;
-    List<Consumer<T>> callbacks = new ArrayList<>();
 
     public StatefulSubject(T startState) {
         super();
@@ -22,7 +21,7 @@ public class StatefulSubject<T> extends Subject<T> implements StatefulObservable
     @Override
     public synchronized void accept(T t) {
         state = t;
-        callbacks.forEach(a -> a.accept(state));
+        super.accept(state);
     }
 
     @Override

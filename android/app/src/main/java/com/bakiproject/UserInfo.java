@@ -24,6 +24,10 @@ public final class UserInfo implements ReactSerialisable {
         this.address = address;
     }
 
+    public UserInfo(String username) {
+        this(username, null, null);
+    }
+
     public String username() {
         return username;
     }
