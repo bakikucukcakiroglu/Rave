@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.bakiproject.ConnectionModel;
 import com.bakiproject.UserInfo;
 import com.bakiproject.streams.StatefulObservable;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unchecked")
 class CommunicationTest {
 
     CommunicationServer server;
@@ -39,6 +41,7 @@ class CommunicationTest {
         serverUserInfoUpdates = server.getUserInfoUpdatesStream();
     }
 
+    // @Test
     void connectDisconnectTest() throws IOException, InterruptedException {
         assertEquals(1, serverUserInfoUpdates.getState().size());
 
@@ -63,6 +66,7 @@ class CommunicationTest {
 
     }
 
+    // @Test
     void doStartMusicSequence() throws InterruptedException, IOException {
         Thread.sleep(1000);
         CommunicationClient c1 = new CommunicationClient(InetAddress.getByName("localhost"), 8000, "c1");
@@ -71,15 +75,15 @@ class CommunicationTest {
         CommunicationClient c2 = new CommunicationClient(InetAddress.getByName("localhost"), 8000, "c2");
 
         Thread.sleep(1000);
-        Consumer<Long> cS = mock(Consumer.class);
-        Consumer<Long> cc1 = mock(Consumer.class);
-        Consumer<Long> cc2 = mock(Consumer.class);
+        Consumer<ConnectionModel.MusicPair> cS = mock(Consumer.class);
+        Consumer<ConnectionModel.MusicPair> cc1 = mock(Consumer.class);
+        Consumer<ConnectionModel.MusicPair> cc2 = mock(Consumer.class);
 
-        server.getStartMusicEventsStream().subscribe(cS);
-        c1.getStartMusicEventsStream().subscribe(cc1);
-        c2.getStartMusicEventsStream().subscribe(cc2);
+        server.getControlMusicEventsStream().subscribe(cS);
+        c1.getControlMusicEventsStream().subscribe(cc1);
+        c2.getControlMusicEventsStream().subscribe(cc2);
 
-        server.doStartMusicSequence();
+        server.doControlMusicSequence(ConnectionModel.MusicState.PLAYING);
 
         Thread.sleep(5000);
 

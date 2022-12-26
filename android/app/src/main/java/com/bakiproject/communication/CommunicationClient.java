@@ -1,8 +1,7 @@
 package com.bakiproject.communication;
 
-import com.bakiproject.Server;
+import com.bakiproject.ConnectionModel;
 import com.bakiproject.UserInfo;
-import com.bakiproject.broadcast.BroadcastClient;
 import com.bakiproject.streams.Observable;
 import com.bakiproject.streams.Single;
 import com.bakiproject.streams.SingleSubject;
@@ -11,19 +10,12 @@ import com.bakiproject.streams.StatefulSubject;
 import com.bakiproject.streams.Subject;
 
 import java.io.IOException;
-import java.lang.reflect.Member;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Callable;
-import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 
 public class CommunicationClient {
     Connection connection;
@@ -45,7 +37,7 @@ public class CommunicationClient {
     /**
      * Ana sınıfa müziği başlat eventi yollamak istediğimizde buraya event atıyoruz.
      */
-    private final Subject<Long> startMusicEventsStream = new Subject<>();
+    private final Subject<ConnectionModel.MusicPair> controlMusicEventsStream = new Subject<>();
 
 
     public CommunicationClient(InetAddress address,
@@ -70,9 +62,9 @@ public class CommunicationClient {
                 .subscribe(userInfoUpdatesStream);
 
         messagesStream
-                .filter(msg -> msg instanceof Message.StartMusicAtTimeMessage)
-                .map(msg -> ((Message.StartMusicAtTimeMessage) msg).millisTimeStart())
-                .subscribe(startMusicEventsStream);
+                .filter(msg -> msg instanceof Message.ControlMusicAtTimeMessage)
+                .map(msg -> ((Message.ControlMusicAtTimeMessage) msg).millisTimeStart())
+                .subscribe(controlMusicEventsStream);
 
 
         messagesStream
@@ -100,7 +92,7 @@ public class CommunicationClient {
         return connectionLostEventStream;
     }
 
-    public Observable<Long> getStartMusicEventsStream() {
-        return startMusicEventsStream;
+    public Observable<ConnectionModel.MusicPair> getControlMusicEventsStream() {
+        return controlMusicEventsStream;
     }
 }

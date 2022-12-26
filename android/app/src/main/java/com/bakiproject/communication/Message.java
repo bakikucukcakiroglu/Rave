@@ -2,6 +2,7 @@ package com.bakiproject.communication;
 
 import androidx.annotation.NonNull;
 
+import com.bakiproject.ConnectionModel;
 import com.bakiproject.UserInfo;
 
 import java.io.Serializable;
@@ -162,15 +163,15 @@ public interface Message extends Serializable {
 
     }
 
-    final class StartMusicAtTimeMessage implements Message {
+    final class ControlMusicAtTimeMessage implements Message {
         private static final long serialVersionUID = 0L;
-        private final long millisTimeStart;
+        private final ConnectionModel.MusicPair millisTimeStart;
 
-        public StartMusicAtTimeMessage(long millisTimeSent) {
+        public ControlMusicAtTimeMessage(ConnectionModel.MusicPair millisTimeSent) {
             this.millisTimeStart = millisTimeSent;
         }
 
-        public long millisTimeStart() {
+        public ConnectionModel.MusicPair millisTimeStart() {
             return millisTimeStart;
         }
 
@@ -178,7 +179,7 @@ public interface Message extends Serializable {
         public boolean equals(Object obj) {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
-            StartMusicAtTimeMessage that = (StartMusicAtTimeMessage) obj;
+            ControlMusicAtTimeMessage that = (ControlMusicAtTimeMessage) obj;
             return this.millisTimeStart == that.millisTimeStart;
         }
 

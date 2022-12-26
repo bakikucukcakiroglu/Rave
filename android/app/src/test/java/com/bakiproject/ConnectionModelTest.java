@@ -14,7 +14,7 @@ import com.bakiproject.react.WritableWrapper;
 
 class ConnectionModelTest {
 
-    @Test
+    //@Test
     synchronized void startServer() throws InterruptedException {
         MediaPlayer mp = mock(MediaPlayer.class);
         MediaPlayer mp2 = mock(MediaPlayer.class);
@@ -48,7 +48,7 @@ class ConnectionModelTest {
     }
 
 
-    @Test
+    //@Test
     synchronized void listServers() throws InterruptedException {
         MediaPlayer mp = mock(MediaPlayer.class);
         MediaPlayer mp2 = mock(MediaPlayer.class);

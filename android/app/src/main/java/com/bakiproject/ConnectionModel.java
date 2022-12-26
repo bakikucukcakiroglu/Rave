@@ -11,13 +11,15 @@ import com.bakiproject.communication.CommunicationServer;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.time.Clock;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.bakiproject.streams.StatefulObservable;
 import com.bakiproject.streams.StatefulSubject;
-import com.bakiproject.streams.Subject;
 import com.bakiproject.react.WritableWrapper;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -28,6 +30,10 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     enum State {
         READY, CONNECTED, SERVING
+    }
+
+    public enum MusicState {
+        PAUSED, PLAYING, STOPPED, WAIT
     }
 
     BroadcastClient broadcastClient;
@@ -41,16 +47,20 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     StatefulObservable<Set<Server>> serverListObservable;
     StatefulSubject<State> stateObservable = new StatefulSubject<>(State.READY);
+    StatefulSubject<MusicState> musicStateObservable = new StatefulSubject<>(MusicState.STOPPED);
     StatefulSubject<Set<UserInfo>> userListObservable = new StatefulSubject<>(Collections.emptySet());
 
     public ConnectionModel(ReactApplicationContext context, MediaPlayer mp) {
         this.mp = mp;
+        mp.start();
         try {
             broadcastClient = new BroadcastClient();
             serverListObservable = broadcastClient.getServerListUpdatesStream();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        stateObservable.subscribe(t -> stopMusic());
     }
 
     @NonNull
@@ -59,17 +69,32 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         return "ConnectionModel";
     }
 
-    private void startMusicAtTime(long time) {
-        /*new Thread(() -> {
-            while (Clock.systemUTC().millis() < time) {
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+    private void controlMusicAtTime(MusicPair pair) {
+        musicStateObservable.accept(MusicState.WAIT);
+
+        if (pair.state == MusicState.PLAYING) {
+            mp.start();
+            mp.pause();
+        }
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                switch (pair.state) {
+                    case PAUSED:
+                        mp.pause();
+                        break;
+                    case PLAYING:
+                        mp.start();
+                        break;
+                    case STOPPED:
+                        mp.stop();
+                        mp.prepareAsync();
+                        break;
                 }
+                musicStateObservable.accept(pair.state);
             }
-        });*/
-        mp.start();
+        }, Date.from(Instant.ofEpochMilli(pair.time)));
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
@@ -85,8 +110,8 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                     username);
 
             communicationServer
-                    .getStartMusicEventsStream()
-                    .subscribe(this::startMusicAtTime);
+                    .getControlMusicEventsStream()
+                    .subscribe(this::controlMusicAtTime);
 
             communicationServer
                     .getUserInfoUpdatesStream()
@@ -102,6 +127,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
     public void stopServer() {
         if (stateObservable.getState() != State.SERVING) {
             return;
@@ -129,8 +155,8 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                     username);
 
             communicationClient
-                    .getStartMusicEventsStream()
-                    .subscribe(this::startMusicAtTime);
+                    .getControlMusicEventsStream()
+                    .subscribe(this::controlMusicAtTime);
 
             communicationClient
                     .getConnectionLostEventStream()
@@ -162,19 +188,32 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void startMusic() {
-
         if (stateObservable.getState() != State.SERVING) {
             return;
         }
+        musicStateObservable.accept(MusicState.WAIT);
 
-        communicationServer.doStartMusicSequence();
+        communicationServer.doControlMusicSequence(MusicState.PLAYING);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public void pauseMusic() {
+        if (stateObservable.getState() != State.SERVING) {
+            return;
+        }
+        musicStateObservable.accept(MusicState.WAIT);
+
+        communicationServer.doControlMusicSequence(MusicState.PAUSED);
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void stopMusic() {
-        mp.stop();
+        if (stateObservable.getState() != State.SERVING) {
+            return;
+        }
+        musicStateObservable.accept(MusicState.WAIT);
 
-
+        communicationServer.doControlMusicSequence(MusicState.STOPPED);
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
@@ -190,5 +229,15 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableArray getServerList() {
         return WritableWrapper.wrap(serverListObservable.getState()).getObj();
+    }
+
+    public static class MusicPair {
+        public final MusicState state;
+        public final long time;
+
+        public MusicPair(MusicState state, long time) {
+            this.state = state;
+            this.time = time;
+        }
     }
 }
