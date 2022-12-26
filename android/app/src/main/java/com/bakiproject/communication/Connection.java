@@ -3,11 +3,13 @@ package com.bakiproject.communication;
 import com.bakiproject.streams.Observable;
 import com.bakiproject.streams.Subject;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicLong;
@@ -81,6 +83,8 @@ public class Connection extends Thread {
                 Message msg = (Message) in.readObject();
                 receivedMessagesStream.accept(msg);
                 System.out.println("Received message of type " + msg.getClass().getSimpleName());
+            } catch (EOFException | SocketException e) {
+                close();
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }

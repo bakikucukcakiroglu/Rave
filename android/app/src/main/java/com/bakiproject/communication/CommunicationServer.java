@@ -1,5 +1,6 @@
 package com.bakiproject.communication;
 
+import com.bakiproject.ConnectionModel;
 import com.bakiproject.UserInfo;
 import com.bakiproject.streams.Observable;
 import com.bakiproject.streams.StatefulObservable;
@@ -39,7 +40,7 @@ public class CommunicationServer {
     /**
      * Ana sınıfa müziği başlat eventi yollamak istediğimizde buraya event atıyoruz.
      */
-    private final Subject<Long> startMusicEventsStream = new Subject<>();
+    private final Subject<ConnectionModel.MusicPair> controlMusicEventsStream = new Subject<>();
 
     /**
      * Bu stream her bizim connectionlarımızdan biri düştüğünde veya clientlardan biri timingupdate
@@ -75,14 +76,14 @@ public class CommunicationServer {
 
         allMessagesStream
                 .subscribeOnThread(messagesThread)
-                .filter(pair -> pair.second instanceof Message.UserIntroMessage)
+                .filter(pair -> pair.msg instanceof Message.UserIntroMessage)
                 .subscribe(pair -> {
                     System.out.println("Received UserIntroMessage");
-                    pair.first.userInfo = new UserInfo(
-                            ((Message.UserIntroMessage) pair.second).info(),
-                            pair.first.address.getHostAddress());
+                    pair.connection.userInfo = new UserInfo(
+                            ((Message.UserIntroMessage) pair.msg).info(),
+                            pair.connection.address.getHostAddress());
 
-                    connections.add(pair.first);
+                    connections.add(pair.connection);
 
                     Set<UserInfo> currUsers = getUsers();
                     userInfoUpdatesStream.accept(currUsers);
@@ -91,11 +92,11 @@ public class CommunicationServer {
 
         allMessagesStream
                 .subscribeOnThread(messagesThread)
-                .filter(pair -> pair.second instanceof Message.DisconnectMessage)
+                .filter(pair -> pair.msg instanceof Message.DisconnectMessage)
                 .subscribe(pair -> {
-                    System.out.println("Removed " + pair.first);
+                    System.out.println("Removed " + pair.connection);
 
-                    connections.remove(pair.first);
+                    connections.remove(pair.connection);
                     Set<UserInfo> currUsers = getUsers();
                     userInfoUpdatesStream.accept(currUsers);
                     broadcastRequestsStream.accept(c -> new Message.UsersListUpdateMessage(currUsers));
@@ -108,12 +109,12 @@ public class CommunicationServer {
 
         allMessagesStream
                 .subscribeOnThread(messagesThread)
-                .filter(pair -> pair.second instanceof Message.GetTimeResponse)
+                .filter(pair -> pair.msg instanceof Message.GetTimeResponse)
                 .subscribe(pair -> {
                     System.out.println("Received GetTimeResponse");
-                    Message.GetTimeResponse msg = (Message.GetTimeResponse) pair.second;
+                    Message.GetTimeResponse msg = (Message.GetTimeResponse) pair.msg;
                     long ctm = System.currentTimeMillis();
-                    pair.first.timeDifference = (ctm + msg.millisTimeRequestSent()) / 2 - msg.millisTimeResponseSent();
+                    pair.connection.timeDifference = (ctm + msg.millisTimeRequestSent()) / 2 - msg.millisTimeResponseSent();
 
                     timingUpdatesStream.accept(connections
                             .stream()
@@ -162,7 +163,7 @@ public class CommunicationServer {
         }
     }
 
-    public void doStartMusicSequence() {
+    public void doControlMusicSequence(ConnectionModel.MusicState state) {
 
         timingUpdatesStream.subscribe(x -> {
             System.out.println("Timings Update");
@@ -177,9 +178,15 @@ public class CommunicationServer {
                     long musicTime = System.currentTimeMillis() + 1000;
 
                     broadcastRequestsStream.accept(connection ->
-                            new Message.StartMusicAtTimeMessage(musicTime - connection.timeDifference));
+                            new Message.ControlMusicAtTimeMessage(
+                                    new ConnectionModel.MusicPair(
+                                            state,
+                                            musicTime - connection.timeDifference)));
 
-                    startMusicEventsStream.accept(musicTime);
+                    controlMusicEventsStream.accept(
+                            new ConnectionModel.MusicPair(
+                                    state,
+                                    musicTime));
                 });
 
         broadcastRequestsStream.accept(connection ->
@@ -193,8 +200,8 @@ public class CommunicationServer {
         return userInfoUpdatesStream;
     }
 
-    public Observable<Long> getStartMusicEventsStream() {
-        return startMusicEventsStream;
+    public Observable<ConnectionModel.MusicPair> getControlMusicEventsStream() {
+        return controlMusicEventsStream;
     }
 
     private static class ServerConnection extends Connection {
@@ -208,13 +215,15 @@ public class CommunicationServer {
     }
 
     static class MessagePair {
-        public final ServerConnection first;
-        public final Message second;
+        public final ServerConnection connection;
+        public final Message msg;
 
         MessagePair(ServerConnection first, Message second) {
-            this.first = first;
-            this.second = second;
+            this.connection = first;
+            this.msg = second;
         }
     }
+
+
 }
 
