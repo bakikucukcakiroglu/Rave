@@ -66,7 +66,6 @@ class CommunicationTest {
         Consumer<Long> cc1 = mock(Consumer.class);
         Consumer<Long> cc2 = mock(Consumer.class);
 
-
         server.getStartMusicEventsStream().subscribe(cS);
         c1.getStartMusicEventsStream().subscribe(cc1);
         c2.getStartMusicEventsStream().subscribe(cc2);
