@@ -218,11 +218,6 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public String getState() {
-        return WritableWrapper.wrap(stateObservable.getState()).getObj();
-    }
-
-    @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableArray getUserList() {
         return WritableWrapper.wrap(userListObservable.getState()).getObj();
     }
@@ -230,6 +225,16 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
     @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableArray getServerList() {
         return WritableWrapper.wrap(serverListObservable.getState()).getObj();
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String getState() {
+        return WritableWrapper.wrap(stateObservable.getState()).getObj();
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String getMusicState() {
+        return WritableWrapper.wrap(musicStateObservable.getState()).getObj();
     }
 
     public static class MusicPair {
