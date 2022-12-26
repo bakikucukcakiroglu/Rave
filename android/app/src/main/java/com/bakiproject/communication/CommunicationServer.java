@@ -45,7 +45,8 @@ public class CommunicationServer {
      * Bu stream her bizim connectionlarımızdan biri düştüğünde veya clientlardan biri timingupdate
      * mesajı yolladığında yeni listeyi receive ediyor. Messages thread'de çalışıyor
      */
-    private final Subject<Set<ServerConnection>> timingUpdatesStream = new Subject<>();
+    private final StatefulSubject<Set<ServerConnection>> timingUpdatesStream
+            = new StatefulSubject<>(Collections.emptySet());
 
 
     public CommunicationServer(String roomName, String username) {
