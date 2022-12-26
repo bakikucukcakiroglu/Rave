@@ -10,8 +10,10 @@ import com.bakiproject.communication.CommunicationClient;
 import com.bakiproject.communication.CommunicationServer;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
@@ -45,7 +47,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     final MediaPlayer mp;
 
-    StatefulObservable<Set<Server>> serverListObservable;
+    StatefulObservable<Collection<Server>> serverListObservable;
     StatefulSubject<State> stateObservable = new StatefulSubject<>(State.READY);
     StatefulSubject<MusicState> musicStateObservable = new StatefulSubject<>(MusicState.STOPPED);
     StatefulSubject<Set<UserInfo>> userListObservable = new StatefulSubject<>(Collections.emptySet());
@@ -236,7 +238,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
         return WritableWrapper.wrap(musicStateObservable.getState()).getObj();
     }
 
-    public static class MusicPair {
+    public static class MusicPair implements Serializable {
         public final MusicState state;
         public final long time;
 

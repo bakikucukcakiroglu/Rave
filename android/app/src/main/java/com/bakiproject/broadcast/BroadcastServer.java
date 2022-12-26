@@ -17,7 +17,7 @@ public class BroadcastServer {
         group = InetAddress.getByName(BroadcastProtocol.BROADCAST_SERVER);
         socket = new MulticastSocket(BroadcastProtocol.BROADCAST_PORT);
         socket.joinGroup(group);
-        announcement = new Server(null, name, 8000, 0);
+        announcement = new Server(null, name, 8000, 1);
         Thread broadcastListener = new Thread(this::runListener);
         Thread broadcastSender = new Thread(() -> {
             while (isOpen) {
