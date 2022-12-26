@@ -45,7 +45,6 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     public ConnectionModel(ReactApplicationContext context, MediaPlayer mp) {
         this.mp = mp;
-        mp.start();
         try {
             broadcastClient = new BroadcastClient();
             serverListObservable = broadcastClient.getServerListUpdatesStream();
@@ -129,7 +128,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                     8000,
                     username);
 
-            communicationServer
+            communicationClient
                     .getStartMusicEventsStream()
                     .subscribe(this::startMusicAtTime);
 
