@@ -29,7 +29,7 @@ public class BroadcastServer {
             public void run() {
                 doBroadcast();
             }
-        }, 1000);
+        }, 0, 1000);
 
         broadcastListener.start();
     }
@@ -49,21 +49,15 @@ public class BroadcastServer {
                     System.out.println("Received announce request.");
                     doBroadcast();
                 }
+            } catch (SocketException ignored) {
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
-        }
-        try {
-            socket.leaveGroup(group);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            socket.close();
         }
     }
 
     public void doBroadcast() {
-        //System.out.println("Doing announcement.");
+        System.out.println("Doing announcement.");
         byte[] buf = announcement.toMessage().getBytes();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, group, BroadcastProtocol.BROADCAST_PORT);
         try {
@@ -76,6 +70,7 @@ public class BroadcastServer {
     public void close() {
         timer.cancel();
         isOpen = false;
+        socket.close();
     }
 
 }
