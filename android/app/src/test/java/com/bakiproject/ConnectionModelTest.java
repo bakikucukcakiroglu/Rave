@@ -57,7 +57,7 @@ class ConnectionModelTest {
 
         Thread.sleep(3000);
 
-        System.out.println(model.broadcastClient.getServerListUpdatesStream().getState());
+        model.broadcastClient.getServerListUpdatesStream().subscribe(System.out::println);
 
         /*model.connectToServer(
                 model.broadcastClient

@@ -29,7 +29,7 @@ public class BroadcastServer {
             public void run() {
                 doBroadcast();
             }
-        }, 0, 1000);
+        }, 0, 500);
 
         broadcastListener.start();
     }

@@ -47,7 +47,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     final MediaPlayer mp;
 
-    StatefulObservable<Collection<Server>> serverListObservable;
+    StatefulSubject<Collection<Server>> serverListObservable = new StatefulSubject<>(Collections.emptySet());
     StatefulSubject<State> stateObservable = new StatefulSubject<>(State.READY);
     StatefulSubject<MusicState> musicStateObservable = new StatefulSubject<>(MusicState.STOPPED);
     StatefulSubject<Set<UserInfo>> userListObservable = new StatefulSubject<>(Collections.emptySet());
@@ -57,7 +57,9 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
         try {
             broadcastClient = new BroadcastClient();
-            serverListObservable = broadcastClient.getServerListUpdatesStream();
+            broadcastClient
+                    .getServerListUpdatesStream()
+                    .subscribe(serverListObservable::accept);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
