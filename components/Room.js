@@ -79,7 +79,8 @@ const Room = ({navigation, route}) => {
           <Text style={styles.textStyle}>Leave Room</Text>
         </Pressable>
       </View>
-      {musicState != "PLAYING" ? (<View style={styles.buttonContainer}>
+     
+      {route.params.role=='master' ? (musicState != "PLAYING" ? (<View style={styles.buttonContainer}>
         <Pressable
           disabled={isWaiting}
           style={({pressed}) => ({
@@ -129,8 +130,68 @@ const Room = ({navigation, route}) => {
         >
           <Icon name="pause" size={50} color="white" />
         </Pressable>
-      </View>)}
-       
+      </View>)) : (
+
+        musicState=="PLAYING" ? 
+
+        (<View style={styles.buttonContainer}>
+         <Pressable
+          disabled={isWaiting}
+          style={({pressed}) => ({
+            opacity: pressed ? 0.5 : 1,
+            width: "100%",
+            height: "100%",
+            backgroundColor: !isWaiting  ? "#2196F3": "darkgray",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center"
+          })}
+          onPress={() =>  ConnectionModel.startMusic()}
+        >
+          <Icon name="play" size={50} color="white" />
+        </Pressable>
+        </View> ) : (
+
+          musicState=="STOPPED" ? (
+
+
+            <Pressable
+              disabled={isWaiting}
+              style={({pressed}) => ({
+                opacity: pressed ? 0.5 : 1,
+                flex:1,
+                height: "100%",
+                backgroundColor: !isWaiting ? "gray" : "darkgray",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRightWidth :1,
+                borderColor:"white",
+              })}
+              onPress={() => ConnectionModel.stopMusic()}
+            >
+              <Icon name="stop" size={50} color="white" />
+            </Pressable>
+          ) : (
+              <Pressable
+                disabled={isWaiting}
+                style={({pressed}) => ({
+                  opacity: pressed ? 0.5 : 1,
+                  flex:1,
+                  height: "100%",
+                  backgroundColor:!isWaiting ? "gray" : "darkgray",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+              })}
+              onPress={() =>  ConnectionModel.pauseMusic()}
+            >
+              <Icon name="pause" size={50} color="white" />
+            </Pressable>
+          )
+        )
+        )
+      }
       {users.find((user) => !user.address) &&
       <View style={styles.cardContainerHost}>
         <Text style={styles.cardText}>

@@ -18,6 +18,7 @@ import {useState, useEffect} from 'react';
 import {Card, Title} from 'react-native-paper';
 
 import Icon from 'react-native-vector-icons/Ionicons';
+import { color } from '@rneui/base';
 
 const {ConnectionModel} = NativeModules;
 
@@ -27,6 +28,7 @@ const Home = ({navigation, route}) => {
   const [rooms, setRooms] = useState([]);
   const [userName, setUserName] = useState('');
   const [roomName, setRoomName] = useState('');
+  const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -48,13 +50,22 @@ const Home = ({navigation, route}) => {
     navigation.setParams({
       loading: true,
     });
-    ConnectionModel.connectToServer(openModalIp, 'test');
+    ConnectionModel.connectToServer(openModalIp, userName);
     setOpenModalIp('');
+    setUserName('');
 
   };
 
   const createRoomOnPressHandler = () => {
-    navigation.navigate('Create Room', {name: 'Jane'});
+    setIsCreateRoomModalOpen(true);
+  };
+
+
+   const handleSubmitCreateRoom = () => {
+     setUserName(''); 
+     setRoomName(''); 
+     setIsCreateRoomModalOpen(false);
+    ConnectionModel.startServer(roomName, userName);
   };
 
   const onPressBack = () => {
@@ -153,9 +164,73 @@ const Home = ({navigation, route}) => {
                 disabled= {!userName.length}
                 style={userName.length ? { backgroundColor: '#2196F3', ...styles.button}: { backgroundColor: 'darkgray',  ...styles.button}}
                 onPress={
-                  ()=> {joinRoomOnPressHandler(); setUserName('')}
+                  ()=> {joinRoomOnPressHandler();}
                 }>
                 <Text style={styles.textStyle}>Join!</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isCreateRoomModalOpen}
+        onRequestClose={() => {
+          setIsCreateRoomModalOpen(false);
+        }}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <View style={{width:"100%", backgroundColor: 'white', padding: 20, borderRadius:10, margin:10, shadowRadius:10, shadowColor:"black", elevation:10}}>
+            
+            <Text style={{color:"black"}}> User Name</Text>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: 'darkgray',
+                borderRadius: 100,
+                padding: 5,
+                paddingLeft: 15,
+                marginBottom: 20,
+              }}
+              placeholder="User Name"
+              placeholderTextColor="darkgray"
+              value={userName}
+              onChangeText={setUserName}></TextInput>
+            <Text style={{color:"black"}}>Room Name</Text>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: 'darkgray',
+                borderRadius: 100,
+                padding: 5,
+                paddingLeft: 15,
+                marginBottom: 20,
+              }}
+              placeholder="Room Name"
+              placeholderTextColor="darkgray"
+              value={roomName}
+              onChangeText={setRoomName}>
+            </TextInput>
+            <View
+              style={{
+                width: '100%',
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+              }}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => {setUserName(''); setRoomName(''); setIsCreateRoomModalOpen(false);}}>
+                <Text style={styles.textStyle}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                disabled= {!userName.length && !roomName.length}
+                style={userName.length ? { backgroundColor: '#2196F3', ...styles.button}: { backgroundColor: 'darkgray',  ...styles.button}}
+                onPress={
+                  ()=> { handleSubmitCreateRoom()}
+                }>
+                <Text style={styles.textStyle}>Create!</Text>
               </Pressable>
             </View>
           </View>
@@ -209,7 +284,7 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 20,
     padding: 10,
-    width: 65,
+    width: 70,
     marginRight: 3,
     elevation: 2,
   },
