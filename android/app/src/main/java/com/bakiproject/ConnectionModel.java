@@ -91,7 +91,11 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
                         break;
                     case STOPPED:
                         mp.stop();
-                        mp.prepareAsync();
+                        try {
+                            mp.prepare();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         break;
                 }
                 musicStateObservable.accept(pair.state);
@@ -190,7 +194,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void startMusic() {
-        if (stateObservable.getState() != State.SERVING) {
+        if (stateObservable.getState() != State.SERVING || musicStateObservable.getState() == MusicState.WAIT) {
             return;
         }
         musicStateObservable.accept(MusicState.WAIT);
@@ -200,7 +204,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void pauseMusic() {
-        if (stateObservable.getState() != State.SERVING) {
+        if (stateObservable.getState() != State.SERVING || musicStateObservable.getState() == MusicState.WAIT) {
             return;
         }
         musicStateObservable.accept(MusicState.WAIT);
@@ -210,7 +214,7 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public void stopMusic() {
-        if (stateObservable.getState() != State.SERVING) {
+        if (stateObservable.getState() != State.SERVING || musicStateObservable.getState() == MusicState.WAIT) {
             return;
         }
         musicStateObservable.accept(MusicState.WAIT);
