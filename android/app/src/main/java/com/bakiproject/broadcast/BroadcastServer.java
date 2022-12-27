@@ -6,32 +6,32 @@ import com.bakiproject.Server;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class BroadcastServer {
     private boolean isOpen = true;
     private final MulticastSocket socket;
     private final InetAddress group;
     private Server announcement;
+    Timer timer;
 
     public BroadcastServer(String name) throws IOException {
         group = InetAddress.getByName(BroadcastProtocol.BROADCAST_SERVER);
         socket = new MulticastSocket(BroadcastProtocol.BROADCAST_PORT);
         socket.joinGroup(group);
-        announcement = new Server(null, name, 8000, 0);
+        announcement = new Server(null, name, 8000, 1);
         Thread broadcastListener = new Thread(this::runListener);
-        Thread broadcastSender = new Thread(() -> {
-            while (isOpen) {
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
                 doBroadcast();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
             }
-        });
+        }, 1000);
 
         broadcastListener.start();
-        broadcastSender.start();
     }
 
     public void setCurrentMembers(int currentMembers) {
@@ -71,20 +71,11 @@ public class BroadcastServer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public void close() {
+        timer.cancel();
         isOpen = false;
     }
 
-    public String packetString(DatagramPacket packet) {
-        return "DatagramPacket{" +
-                "buf=\"" + new String(packet.getData(), packet.getOffset(), packet.getLength()) +
-                "\", offset=" + packet.getOffset() +
-                ", length=" + packet.getLength() +
-                ", address=" + packet.getAddress() +
-                ", port=" + packet.getPort() +
-                '}';
-    }
 }

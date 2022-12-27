@@ -9,7 +9,9 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.time.Clock;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -21,7 +23,7 @@ public class BroadcastClient {
     InetAddress group;
     ListenerThread listenerThread;
 
-    private final StatefulSubject<Set<Server>> serverListUpdatesStream = new StatefulSubject<>(Collections.emptySet());
+    private final StatefulSubject<Collection<Server>> serverListUpdatesStream = new StatefulSubject<>(Collections.emptySet());
 
     public BroadcastClient() throws IOException {
         socket = new MulticastSocket(BroadcastProtocol.BROADCAST_PORT);
@@ -49,16 +51,16 @@ public class BroadcastClient {
 
                     long time_millis = Clock.systemUTC().millis();
 
-                    HashSet<Server> announcements = new HashSet<>();
+                    HashMap<String, Server> announcements = new HashMap<>();
 
                     while (Clock.systemUTC().millis() - time_millis < 2000) {
                         socket.receive(packet2);
                         String message = new String(packet2.getData(), packet2.getOffset(), packet2.getLength()).trim();
                         Optional<Server> announcement = Server.fromMessage(packet2.getAddress().getHostAddress(), message);
-                        announcement.ifPresent(announcements::add);
+                        announcement.ifPresent(ann -> announcements.put(ann.addr(), ann));
                     }
 
-                    serverListUpdatesStream.accept(announcements);
+                    serverListUpdatesStream.accept(announcements.values());
                 } catch (IOException e) {
                     isRunning = false;
                 }
@@ -66,7 +68,7 @@ public class BroadcastClient {
         }
     }
 
-    public StatefulObservable<Set<Server>> getServerListUpdatesStream() {
+    public StatefulObservable<Collection<Server>> getServerListUpdatesStream() {
         return serverListUpdatesStream;
     }
 }
