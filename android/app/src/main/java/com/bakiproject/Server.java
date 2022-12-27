@@ -56,13 +56,12 @@ public final class Server implements ReactSerialisable {
         Server that = (Server) obj;
         return Objects.equals(this.addr, that.addr) &&
                 Objects.equals(this.name, that.name) &&
-                this.port == that.port &&
-                this.currentMembers == that.currentMembers;
+                this.port == that.port;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(addr, name, port, currentMembers);
+        return Objects.hash(addr, name, port);
     }
 
     @Override

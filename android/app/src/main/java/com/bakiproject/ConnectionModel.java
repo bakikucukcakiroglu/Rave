@@ -64,7 +64,14 @@ public class ConnectionModel extends ReactContextBaseJavaModule {
             throw new RuntimeException(e);
         }
 
-        stateObservable.subscribe(t -> stopMusic());
+        stateObservable.subscribe(t -> {
+            mp.stop();
+            try {
+                mp.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @NonNull
