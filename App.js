@@ -1,5 +1,5 @@
 import {React, useState, useEffect} from 'react';
-import {Text, Button, NativeModules} from 'react-native';
+import {Text, Button, NativeModules, BackHandler,  Alert } from 'react-native';
 import {
   NavigationContainer,
   createNavigationContainerRef,
@@ -21,6 +21,49 @@ const {ConnectionModel} = NativeModules;
 
 export default function App() {
   const [state, setState] = useState();
+
+  useEffect(() => {
+    const backAction = () => {
+
+      switch (state) {
+        case 'READY':
+          
+          BackHandler.exitApp();
+          break;
+
+        case 'CONNECTED':
+          Alert.alert("Hold on!", "Are you sure you want to leave the room?", [
+          {
+            text: "Cancel",
+            onPress: () => null,
+            style: "cancel"
+          },
+          { text: "YES", onPress: () => ConnectionModel.disconnectFromServer()}
+          ]);
+          break;
+
+        case 'SERVING':
+          Alert.alert("Hold on!", "Are you sure you want to close the room?", [
+          {
+            text: "Cancel",
+            onPress: () => null,
+            style: "cancel"
+          },
+          { text: "YES", onPress: () => ConnectionModel.stopServer()}
+          ]);
+          break;
+      }
+     
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [state]);
 
   useEffect(() => {
     const interval = setInterval(() => {

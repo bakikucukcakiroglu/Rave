@@ -105,16 +105,16 @@ const Home = ({navigation, route}) => {
         renderItem={({ item }) => (
           <View style={styles.cardContainer}>
             
-            
-
-            <View style={{flex:1,display:"flex", flexDirection:"column", justifyContent:"center"}}>
-              <Text style={styles.cardTextRoomName}><Icon name="ios-people-circle" size={30} color="black" />{" "} {item.name}</Text>
-              <Text style={styles.cardText}>{" IP: "}{item.address}</Text>
+            <View style={{flex:1,display:"flex",flexDirection:"column", justifyContent:"center", backgroundColor:"white"}}>
+                {/* <Icon name="ios-people-circle" size={30} color="black" /> */}
+              <Text style={styles.cardTextRoomName}> {item.name}</Text>
+              <Text style={{ fontSize:14, color:"gray"}}><Icon name="ios-logo-rss" size={14} color="gray" /> {" "}{item.address}</Text>
+              <Text style={{ fontSize:14, color:"gray"}}><Icon name="people" size={15} color="gray" /> {" "}{item.currentMembers}</Text>
             </View>
             <Pressable onPress={() => setOpenModalIp(item.address)}>
               <Icon name="md-enter" size={35} color="#2196F3" />
             </Pressable>
-        
+      
           </View>
         )}
       />
@@ -155,14 +155,14 @@ const Home = ({navigation, route}) => {
                 alignItems: 'center',
               }}>
               <Pressable
-                style={[styles.button, styles.buttonClose]}
+                style={({pressed}) => ({ opacity: pressed ? 0.5 : 1,  backgroundColor: 'gray', ...styles.button})}
                 onPress={() => {setOpenModalIp(''); setUserName('');}}>
                 <Text style={styles.textStyle}>Cancel</Text>
               </Pressable>
 
               <Pressable
                 disabled= {!userName.length}
-                style={userName.length ? { backgroundColor: '#2196F3', ...styles.button}: { backgroundColor: 'darkgray',  ...styles.button}}
+                style={userName.length ? ({pressed}) => ({ opacity: pressed ? 0.5 : 1,  backgroundColor: '#2196F3', ...styles.button}): { backgroundColor: 'darkgray',  ...styles.button}}
                 onPress={
                   ()=> {joinRoomOnPressHandler();}
                 }>
@@ -219,14 +219,14 @@ const Home = ({navigation, route}) => {
                 alignItems: 'center',
               }}>
               <Pressable
-                style={[styles.button, styles.buttonClose]}
+                style={({pressed}) => ({ opacity: pressed ? 0.5 : 1,  backgroundColor: 'gray', ...styles.button})}
                 onPress={() => {setUserName(''); setRoomName(''); setIsCreateRoomModalOpen(false);}}>
                 <Text style={styles.textStyle}>Cancel</Text>
               </Pressable>
 
               <Pressable
-                disabled= {!userName.length && !roomName.length}
-                style={userName.length ? { backgroundColor: '#2196F3', ...styles.button}: { backgroundColor: 'darkgray',  ...styles.button}}
+                disabled= {!userName.length || !roomName.length}
+                style={(userName.length&&roomName.length) ?({pressed}) => ( { opacity: pressed ? 0.5 : 1,  backgroundColor: '#2196F3', ...styles.button}): { backgroundColor: 'darkgray',  ...styles.button}}
                 onPress={
                   ()=> { handleSubmitCreateRoom()}
                 }>
@@ -313,14 +313,14 @@ const styles = StyleSheet.create({
   cardContainer: {
     padding: 16,
     margin: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "white",
     borderRadius: 8,
-    borderColor: "green",
     display:"flex",
     flexDirection:"row",
     alignItems:"center",
     justifyContent:"space-between",
-    elevation:3
+    elevation:3,
+    
 
   },
   container: {
@@ -330,7 +330,9 @@ const styles = StyleSheet.create({
   },
    cardTextRoomName: {
     fontSize: 20,
-    textAlignVertical:"center"
+    textAlignVertical:"center",
+    fontWeight:"bold",
+    color:"black"
 
   },
 });

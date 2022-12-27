@@ -194,8 +194,8 @@ const Room = ({navigation, route}) => {
       }
       {users.find((user) => !user.address) &&
       <View style={styles.cardContainerHost}>
-        <Text style={styles.cardText}>
-            <Icon name="home" size={20} color="black" /> {"  "}{users.find((user) => !user.address).username}</Text>
+        <Text style={{fontWeight:"bold",  fontSize:22, color:"black"}}>
+            <Icon name="home" size={22} color="black" /> {"  "}{users.find((user) => !user.address).username}</Text>
       </View>}
       <FlatList
         data={users.filter((user)=> user.address)}
@@ -203,8 +203,8 @@ const Room = ({navigation, route}) => {
         // keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.cardContainer}>
-            <Text style={styles.cardText}>{item.username}</Text>
-            <Text style={styles.cardText}>{item.address}</Text>
+            <Text style={{fontWeight:"bold",  fontSize:18, color:"black"}}><Icon name="ios-person" size={18} color="black" />{"  "}{item.username}</Text>
+            <Text style={{ fontSize:14, color:"gray"}}><Icon name="ios-logo-rss" size={14} color="gray" /> {" "}{item.address}</Text>
           </View>
         )}
       />
@@ -249,10 +249,7 @@ const styles = StyleSheet.create({
     alignItems:"center"
 
   },
-  cardText: {
-    fontSize: 18,
 
-  },
   flatList: {
     flex: 1
   },
