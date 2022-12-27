@@ -55,8 +55,16 @@ export default function App() {
           name="Rave"
           component={Home}
           initialParams={{itemId: 42}}
+          options={{
+            headerShown: false,
+            //headerLeft: ()=> null
+          }}
         />
-        <Stack.Screen name="Room" component={Room} />
+        <Stack.Screen name="Room" component={Room} 
+         options={{
+            headerShown: false,
+            //headerLeft: ()=> null
+          }} />
         <Stack.Screen name="Create Room" component={CreateRoom} />
       </Stack.Navigator>
     </NavigationContainer>

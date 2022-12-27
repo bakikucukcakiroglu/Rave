@@ -4,51 +4,10 @@ import Icon from "react-native-vector-icons/Ionicons";
 
 const {ConnectionModel} = NativeModules;
 
-
-const mockUserData = [
-  {
-    id: "1",
-    name: "John Smith",
-    age: 32
-  },
-  {
-    id: "2",
-    name: "Jane Doe",
-    age: 28
-  },
-  {
-    id: "3",
-    name: "Bob Johnson",
-    age: 45
-  },
-  {
-    id: "2",
-    name: "Jane Doe",
-    age: 28
-  },
-  {
-    id: "3",
-    name: "Bob Johnson",
-    age: 45
-  },
-   {
-    id: "2",
-    name: "Jane Doe",
-    age: 28
-  },
-  {
-    id: "3",
-    name: "Bob Johnson",
-    age: 45
-  }
-];
-
-const Room = () => {
+const Room = ({navigation, route}) => {
   const [users, setUsers] = useState([]);
   const [musicState, setMusicState] = useState("STOPPED");
   const [isWaiting, setIsWaiting]  = useState(false);
-
-
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -83,19 +42,55 @@ const Room = () => {
     };
   }, []);
 
+  function handleLeaveRoom(){
+
+    if(route.params.role == 'master'){
+
+      ConnectionModel.stopServer();
+
+    }else{
+
+       ConnectionModel.disconnectFromServer();
+    }
+  }
+
+  const handleSubmitCreateRoom = () => {
+    ConnectionModel.startServer(roomName, userName);
+  };
+
   return (
     <View style={styles.container}>
+      <View style={{ height:"7%", display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"flex-start", paddingLeft:15}}>
+      <Text style={ { color: 'black',fontWeight: 'bold', textAlign: 'center', fontSize:20}}>Room</Text>
+      </View>
+      <View>
+        <Pressable
+          style={({pressed}) => ({
+            opacity: pressed ? 0.5 : 1,
+            padding: 10,
+            backgroundColor: '#2196F3',
+            borderBottomWidth:1,
+            borderColor:"white"
+          })}
+          onPress={() =>  handleLeaveRoom()}
+
+          >
+
+          <Text style={styles.textStyle}>Leave Room</Text>
+        </Pressable>
+      </View>
       {musicState != "PLAYING" ? (<View style={styles.buttonContainer}>
         <Pressable
           disabled={isWaiting}
-          style={{
+          style={({pressed}) => ({
+            opacity: pressed ? 0.5 : 1,
             width: "100%",
             height: "100%",
             backgroundColor: !isWaiting  ? "#2196F3": "darkgray",
             display: "flex",
             justifyContent: "center",
             alignItems: "center"
-          }}
+          })}
           onPress={() =>  ConnectionModel.startMusic()}
         >
           <Icon name="play" size={50} color="white" />
@@ -104,7 +99,8 @@ const Room = () => {
        :(<View style={styles.buttonContainer}>
          <Pressable
           disabled={isWaiting}
-          style={{
+          style={({pressed}) => ({
+            opacity: pressed ? 0.5 : 1,
             flex:1,
             height: "100%",
             backgroundColor: !isWaiting ? "gray" : "darkgray",
@@ -113,25 +109,22 @@ const Room = () => {
             alignItems: "center",
             borderRightWidth :1,
             borderColor:"white",
-          }}
+          })}
           onPress={() => ConnectionModel.stopMusic()}
         >
           <Icon name="stop" size={50} color="white" />
         </Pressable>
-       
           <Pressable
             disabled={isWaiting}
-            style={{
+            style={({pressed}) => ({
+              opacity: pressed ? 0.5 : 1,
               flex:1,
               height: "100%",
               backgroundColor:!isWaiting ? "gray" : "darkgray",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-      
-         
-            //borderStyle:"solid"
-          }}
+          })}
           onPress={() =>  ConnectionModel.pauseMusic()}
         >
           <Icon name="pause" size={50} color="white" />
@@ -201,7 +194,12 @@ const styles = StyleSheet.create({
   },
   flatList: {
     flex: 1
-  }
+  },
+    textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
 
 export default Room;

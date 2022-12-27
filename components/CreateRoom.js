@@ -15,12 +15,9 @@ import WheelPicker from 'react-native-wheely';
 const {ConnectionModel} = NativeModules;
 
 const CreateRoom = ({navigation}) => {
-  const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [roomName, setRoomName] = useState('');
-  const [roomCapacity, setRoomCapacity] = useState(0);
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleSubmitCreateRoom = () => {
     ConnectionModel.startServer(roomName, userName);
@@ -61,22 +58,7 @@ const CreateRoom = ({navigation}) => {
           placeholderTextColor="#000"
           value={roomName}
           onChangeText={setRoomName}></TextInput>
-        <Text style={styles.inputLabel}>Room Capacity</Text>
-        <WheelPicker
-          visibleRest={1}
-          selectedIndex={roomCapacity}
-          itemHeight={40}
-          options={[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
-          onChange={index => setSelectedIndex(index)}
-          containerStyle={{
-            borderColor: 'black',
-            borderWidth: 1,
-            marginLeft: 15,
-            marginRight: 15,
-            borderRadius: 10,
-            marginBottom: 20,
-          }}
-        />
+       
       </View>
       <Pressable
         style={({pressed}) => (pressed ? styles.buttonPressed : styles.button)}

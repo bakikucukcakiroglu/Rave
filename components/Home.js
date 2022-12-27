@@ -26,6 +26,7 @@ const Home = ({navigation, route}) => {
   const [visible, setVisible] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [userName, setUserName] = useState('');
+  const [roomName, setRoomName] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -69,6 +70,12 @@ const Home = ({navigation, route}) => {
     </View>
   ) : (
     <View style={styles.container}>
+      <View style={{ height:"7%", display:"flex", flexDirection:"row", alignItems:"center", justifyContent:"flex-start", paddingLeft:15}}>
+    
+          <Text style={ { color: 'black',fontWeight: 'bold', textAlign: 'center', fontSize:20}}>Rave</Text>
+     
+      </View>
+      
       <View>
         <Pressable
           style={({pressed}) => ({
@@ -100,6 +107,7 @@ const Home = ({navigation, route}) => {
           </View>
         )}
       />
+  
       <Modal
         animationType="slide"
         transparent={true}
@@ -107,15 +115,15 @@ const Home = ({navigation, route}) => {
         onRequestClose={() => {
           setOpenModalIp('');
         }}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <View style={{width:"100%", backgroundColor: 'white', padding: 20, borderRadius:10, margin:10, shadowRadius:10, shadowColor:"black", elevation:10}}>
             <Text style={styles.modalText}>
-              {'Type your user name for the room.'}
+              {'Type your user name to join the room.'}
             </Text>
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: 'black',
+                borderColor: 'darkgray',
                 width: '100%',
 
                 borderRadius: 100,
@@ -125,7 +133,7 @@ const Home = ({navigation, route}) => {
                 marginBottom: 15,
               }}
               placeholder="User Name"
-              placeholderTextColor="#000"
+              placeholderTextColor="darkgray"
               value={userName}
               onChangeText={setUserName}></TextInput>
             <View
@@ -137,7 +145,7 @@ const Home = ({navigation, route}) => {
               }}>
               <Pressable
                 style={[styles.button, styles.buttonClose]}
-                onPress={() => setOpenModalIp('')}>
+                onPress={() => {setOpenModalIp(''); setUserName('');}}>
                 <Text style={styles.textStyle}>Cancel</Text>
               </Pressable>
 
@@ -145,7 +153,7 @@ const Home = ({navigation, route}) => {
                 disabled= {!userName.length}
                 style={userName.length ? { backgroundColor: '#2196F3', ...styles.button}: { backgroundColor: 'darkgray',  ...styles.button}}
                 onPress={
-                  joinRoomOnPressHandler
+                  ()=> {joinRoomOnPressHandler(); setUserName('')}
                 }>
                 <Text style={styles.textStyle}>Join!</Text>
               </Pressable>
@@ -196,6 +204,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     alignSelf: 'flex-start',
+    fontWeight:"bold"
   },
   button: {
     borderRadius: 20,
@@ -235,7 +244,8 @@ const styles = StyleSheet.create({
     display:"flex",
     flexDirection:"row",
     alignItems:"center",
-    justifyContent:"space-between"
+    justifyContent:"space-between",
+    elevation:3
 
   },
   container: {
