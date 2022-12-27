@@ -62,7 +62,7 @@ public class BroadcastClient {
 
                     serverListUpdatesStream.accept(announcements.values());
                 } catch (IOException e) {
-                    isRunning = false;
+                    e.printStackTrace();
                 }
             }
         }
