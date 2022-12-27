@@ -1,5 +1,5 @@
 import React, { useState , useEffect} from "react";
-import { View, Text, StyleSheet, Button, FlatList ,  NativeModules,Pressable} from "react-native";
+import { View, Text, StyleSheet, Button, FlatList ,  NativeModules,Pressable, Alert} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
 const {ConnectionModel} = NativeModules;
@@ -46,11 +46,29 @@ const Room = ({navigation, route}) => {
 
     if(route.params.role == 'master'){
 
-      ConnectionModel.stopServer();
+       Alert.alert("Hold on!", "Are you sure you want to close the room?", [
+          {
+            text: "Cancel",
+            onPress: () => null,
+            style: "cancel"
+          },
+          { text: "YES", onPress: () => ConnectionModel.stopServer()}
+      ]);
+       
 
+      
     }else{
 
-       ConnectionModel.disconnectFromServer();
+
+       Alert.alert("Hold on!", "Are you sure you want to leave the room?", [
+          {
+            text: "Cancel",
+            onPress: () => null,
+            style: "cancel"
+          },
+          { text: "YES", onPress: () => ConnectionModel.disconnectFromServer()}
+      ]);
+       
     }
   }
 
